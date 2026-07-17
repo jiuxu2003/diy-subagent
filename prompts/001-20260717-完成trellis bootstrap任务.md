@@ -1,0 +1,3 @@
+平台: codex
+
+我的目标技术栈是前端typescript后端rust,产品形态是类似于cc-switchi的macos app,原型应该是：能够帮助用户配置复杂的来自各个agent(首批适配使用人数最多的 claude、codex和cursor)的subagent,比如说claude codexf的Sub-agent定义文件在.claude/,agents/{name}.md,使用YAML frontmatteri语法，而并非所有人都知晓这个语法要怎么写，以及到底该怎么配置子智能体，我们会提供一些写的较好的subagent模版文件，这样用户就可以不用机械地去使用官方built-in的几个默认子智能体，我想做的是让subagent可以融入每个人的工作流
