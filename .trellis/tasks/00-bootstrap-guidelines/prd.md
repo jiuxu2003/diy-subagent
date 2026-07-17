@@ -21,9 +21,25 @@ the rest conversationally.
 
 ## Status (update the checkboxes as you complete each item)
 
-- [ ] Fill backend guidelines
-- [ ] Fill frontend guidelines
-- [ ] Add code examples
+- [x] Fill backend guidelines
+- [x] Fill frontend guidelines
+- [x] Add code examples
+
+### Confirmed bootstrap baseline
+
+The repository is intentionally pre-implementation. The developer confirmed
+the initial conventions rather than asking the task to infer them from source:
+
+- macOS-first desktop app using Tauri 2, Rust, React, and TypeScript;
+- TanStack Query for frontend IPC/server state;
+- SQLite for application-owned templates, indexes, and settings;
+- native agent files remain the source of truth;
+- first adapters target Claude Code, Codex, and Cursor;
+- adapter boundaries must support the wider Markdown/TOML/JSON platform
+  differences documented in `docs/official/002-trellis-docs.md`.
+
+Examples in the spec are canonical implementation patterns approved for the
+first vertical slice. They are not presented as already-existing source files.
 
 ---
 

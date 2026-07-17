@@ -1,12 +1,15 @@
 # Frontend Development Guidelines
 
-> Best practices for frontend development in this project.
+> React and TypeScript conventions for the Tauri desktop application.
 
 ---
 
 ## Overview
 
-This directory contains guidelines for frontend development. Fill in each file with your project's specific conventions.
+The frontend is a React application built with TypeScript and Vite. It presents
+platform-aware forms and previews, but it does not parse, render, discover, or
+write native agent files. Those responsibilities stay in Rust. TanStack Query
+owns asynchronous Tauri IPC state; local React state owns ephemeral UI state.
 
 ---
 
@@ -14,26 +17,26 @@ This directory contains guidelines for frontend development. Fill in each file w
 
 | Guide | Description | Status |
 |-------|-------------|--------|
-| [Directory Structure](./directory-structure.md) | Module organization and file layout | To fill |
-| [Component Guidelines](./component-guidelines.md) | Component patterns, props, composition | To fill |
-| [Hook Guidelines](./hook-guidelines.md) | Custom hooks, data fetching patterns | To fill |
-| [State Management](./state-management.md) | Local state, global state, server state | To fill |
-| [Quality Guidelines](./quality-guidelines.md) | Code standards, forbidden patterns | To fill |
-| [Type Safety](./type-safety.md) | Type patterns, validation | To fill |
+| [Directory Structure](./directory-structure.md) | Feature-first React organization | Initial baseline |
+| [Component Guidelines](./component-guidelines.md) | Components, forms, styling, and accessibility | Initial baseline |
+| [Hook Guidelines](./hook-guidelines.md) | TanStack Query and typed Tauri hooks | Initial baseline |
+| [State Management](./state-management.md) | Local, server, draft, and persistent state boundaries | Initial baseline |
+| [Quality Guidelines](./quality-guidelines.md) | TypeScript quality gates and UI tests | Initial baseline |
+| [Type Safety](./type-safety.md) | Strict types and runtime boundary validation | Initial baseline |
 
 ---
 
-## How to Fill These Guidelines
+## Pre-Development Checklist
 
-For each guideline file:
+Before changing frontend code:
 
-1. Document your project's **actual conventions** (not ideals)
-2. Include **code examples** from your codebase
-3. List **forbidden patterns** and why
-4. Add **common mistakes** your team has made
-
-The goal is to help AI assistants and new team members understand how YOUR project works.
+1. Read the relevant guide above.
+2. Identify the owning feature and avoid adding business logic to shared UI.
+3. Confirm the typed IPC request, response, and error contracts.
+4. Decide whether state is local UI state, form draft state, or TanStack Query
+   server state.
+5. Test keyboard, screen-reader, loading, empty, invalid, and conflict states.
 
 ---
 
-**Language**: All documentation should be written in **English**.
+**Language**: All documentation and code comments should be written in English.

@@ -1,12 +1,15 @@
 # Backend Development Guidelines
 
-> Best practices for backend development in this project.
+> Rust and Tauri backend conventions for the subagent configuration desktop app.
 
 ---
 
 ## Overview
 
-This directory contains guidelines for backend development. Fill in each file with your project's specific conventions.
+The backend is a macOS-first Tauri 2 application written in Rust. It owns all
+filesystem access, platform-format parsing and rendering, validation, backups,
+atomic writes, SQLite persistence, and the typed IPC boundary exposed to the
+TypeScript frontend.
 
 ---
 
@@ -14,25 +17,26 @@ This directory contains guidelines for backend development. Fill in each file wi
 
 | Guide | Description | Status |
 |-------|-------------|--------|
-| [Directory Structure](./directory-structure.md) | Module organization and file layout | To fill |
-| [Database Guidelines](./database-guidelines.md) | ORM patterns, queries, migrations | To fill |
-| [Error Handling](./error-handling.md) | Error types, handling strategies | To fill |
-| [Quality Guidelines](./quality-guidelines.md) | Code standards, forbidden patterns | To fill |
-| [Logging Guidelines](./logging-guidelines.md) | Structured logging, log levels | To fill |
+| [Directory Structure](./directory-structure.md) | Tauri commands, services, domain, adapters, and infrastructure | Initial baseline |
+| [Database Guidelines](./database-guidelines.md) | SQLite metadata and template persistence | Initial baseline |
+| [Error Handling](./error-handling.md) | Typed Rust errors and stable IPC error contracts | Initial baseline |
+| [Quality Guidelines](./quality-guidelines.md) | Rust quality gates and contract tests | Initial baseline |
+| [Logging Guidelines](./logging-guidelines.md) | Structured, privacy-safe application logs | Initial baseline |
 
 ---
 
-## How to Fill These Guidelines
+## Pre-Development Checklist
 
-For each guideline file:
+Before changing backend code:
 
-1. Document your project's **actual conventions** (not ideals)
-2. Include **code examples** from your codebase
-3. List **forbidden patterns** and why
-4. Add **common mistakes** your team has made
-
-The goal is to help AI assistants and new team members understand how YOUR project works.
+1. Read the relevant guide above.
+2. Identify whether the change belongs to commands, services, domain, adapters,
+   or infrastructure.
+3. Map the complete native-file -> adapter -> domain -> IPC data flow.
+4. Confirm validation, conflict detection, backup, atomic-write, and rollback
+   behavior for every user-owned file mutation.
+5. Add or update real contract fixtures and failure-path tests.
 
 ---
 
-**Language**: All documentation should be written in **English**.
+**Language**: All documentation and code comments should be written in English.

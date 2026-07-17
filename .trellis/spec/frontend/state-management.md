@@ -1,51 +1,89 @@
 # State Management
 
-> How state is managed in this project.
-
----
-
-## Overview
-
-<!--
-Document your project's state management conventions here.
-
-Questions to answer:
-- What state management solution do you use?
-- How is local vs global state decided?
-- How do you handle server state?
-- What are the patterns for derived state?
--->
-
-(To be filled by the team)
+> Clear ownership for local UI, editable drafts, asynchronous IPC, and durable state.
 
 ---
 
 ## State Categories
 
-<!-- Local state, global state, server state, URL state -->
+| Category | Owner | Examples |
+|----------|-------|----------|
+| Local UI state | React component/reducer | selected tab, expanded section, dialog state |
+| Editable draft state | Feature reducer/form | agent fields, dirty state, validation issues |
+| Backend/server state | TanStack Query | discovered files, templates, previews, backups |
+| Durable app state | Rust + SQLite/settings | favorites, registered projects, preferences |
+| Native agent state | User-owned files | Claude/Codex/Cursor definitions |
 
-(To be filled by the team)
+Native agent state is never stored as authoritative frontend state. A loaded
+definition includes a source revision/hash; commits must include that revision.
 
 ---
 
-## When to Use Global State
+## Local and Global State
 
-<!-- Criteria for promoting state to global -->
-
-(To be filled by the team)
+- Keep state local until two independent feature roots need the same ephemeral
+  value.
+- Use context for stable application services such as theme or localization.
+- Use a reducer for workflows with explicit states and events.
+- Do not introduce a global state library until a concrete cross-feature use
+  case cannot be modeled by TanStack Query or a focused context.
+- Never move TanStack Query data into a second global cache.
+- Do not use `localStorage` as the source of truth for application settings or
+  user-owned files.
 
 ---
 
-## Server State
+## Draft State
 
-<!-- How server data is cached and synchronized -->
+Agent editing uses a discriminated state machine:
 
-(To be filled by the team)
+```ts
+type AgentEditorState =
+  | { status: \"loading\" }
+  | { status: \"editing\"; draft: AgentDraft; sourceRevision: string }
+  | {
+      status: \"previewing\";
+      draft: AgentDraft;
+      sourceRevision: string;
+    }
+  | {
+      status: \"reviewing\";
+      draft: AgentDraft;
+      preview: AgentWritePreview;
+    }
+  | {
+      status: \"conflict\";
+      draft: AgentDraft;
+      latestRevision: string;
+    };
+```
+
+Every reducer switch is exhaustive. Do not represent this workflow with several
+independent booleans such as `isLoading`, `isPreviewing`, `hasConflict`, and
+`isSaving` that can become contradictory.
+
+---
+
+## Backend State
+
+- TanStack Query cache is a view of Rust state, not an offline database.
+- Query freshness is chosen by data volatility; native-file listings must
+  refresh on app focus and after filesystem mutation.
+- External filesystem changes invalidate affected queries through an explicit
+  backend event or a scoped refresh.
+- Optimistic updates are allowed only for application-owned metadata. Never
+  optimistically claim that a native file write succeeded.
+- Mutations display the committed backend result rather than reconstructing it
+  from the submitted draft.
 
 ---
 
 ## Common Mistakes
 
-<!-- State management mistakes your team has made -->
-
-(To be filled by the team)
+- Treating SQLite metadata, query cache, or a form draft as newer than the
+  native file.
+- Keeping prompt bodies or imported secrets in browser storage.
+- Building one giant global store for editor, templates, settings, and projects.
+- Deriving state in several components instead of one reducer or selector.
+- Discarding an unsaved draft when a background refresh detects an external
+  change; enter a conflict state and let the user compare.
