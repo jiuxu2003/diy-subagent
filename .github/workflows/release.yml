@@ -1,0 +1,85 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  version-check:
+    name: Verify tag matches project versions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compare tag with package.json / tauri.conf.json / Cargo.toml
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG="$(jq -r .version package.json)"
+          CONF="$(jq -r .version src-tauri/tauri.conf.json)"
+          CARGO="$(python3 -c "import tomllib; print(tomllib.load(open('src-tauri/Cargo.toml','rb'))['package']['version'])")"
+          echo "tag=${TAG} package.json=${PKG} tauri.conf.json=${CONF} Cargo.toml=${CARGO}"
+          if [ "${TAG}" != "${PKG}" ] || [ "${TAG}" != "${CONF}" ] || [ "${TAG}" != "${CARGO}" ]; then
+            echo "::error::Tag v${TAG} does not match project versions (package.json=${PKG}, tauri.conf.json=${CONF}, Cargo.toml=${CARGO})"
+            exit 1
+          fi
+
+  checks:
+    name: Regression checks
+    needs: version-check
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    name: Build and draft release
+    needs: checks
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Builds an ad-hoc signed bundle (no Apple Developer certificate yet).
+      # To enable signing + notarization later: configure the repo secrets
+      # below and uncomment the env lines — no other change is required.
+      #   APPLE_CERTIFICATE / APPLE_CERTIFICATE_PASSWORD / APPLE_SIGNING_IDENTITY
+      #   APPLE_ID / APPLE_PASSWORD / APPLE_TEAM_ID
+      - name: Build app and create draft release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          # APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          # APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          # APPLE_ID: ${{ secrets.APPLE_ID }}
+          # APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        with:
+          tagName: v__VERSION__
+          releaseName: "DIY Subagent v__VERSION__"
+          releaseDraft: true
+          prerelease: false
+          releaseBody: |
+            ## 安装说明
+
+            1. 下载下方的 `.dmg` 附件并打开，将 `DIY Subagent.app` 拖入「应用程序」。
+            2. 本版本未经 Apple 签名与公证，首次打开会被 Gatekeeper 拦截，任选其一放行：
+               - 打开「系统设置 → 隐私与安全性」，在底部点击「仍要打开」；
+               - 或在终端执行：`xattr -dr com.apple.quarantine "/Applications/DIY Subagent.app"`。
+
+            仅支持 Apple Silicon（aarch64）的 macOS。
