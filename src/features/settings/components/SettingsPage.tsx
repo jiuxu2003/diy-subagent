@@ -98,7 +98,10 @@ export function SettingsPage() {
                       ? "warning"
                       : "danger"}
                   >
-                    {availabilityLabel(directory.availability)}
+                    {availabilityLabel(
+                      directory.availability,
+                      directory.platformDetected,
+                    )}
                   </Badge>
                   <Badge>
                     {directory.source === "userOverride"
@@ -150,12 +153,16 @@ export function SettingsPage() {
   );
 }
 
-function availabilityLabel(value: string): string {
+function availabilityLabel(value: string, platformDetected: boolean): string {
   switch (value) {
     case "ready":
       return "可用";
     case "missing":
-      return "尚未初始化";
+      // Distinguish "platform installed but agents dir not created yet"
+      // from "platform itself not detected" to avoid looking like a bug.
+      return platformDetected
+        ? "agents 目录未创建（安装时自动创建）"
+        : "未检测到该平台";
     case "permissionDenied":
       return "无权限";
     case "invalidOverride":

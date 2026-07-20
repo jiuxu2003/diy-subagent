@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import importAgentResultFixture from "../../tests/fixtures/import-agent-result-claude.json?raw";
-import { importAgentResultSchema } from "./index";
+import platformDirectoryFixture from "../../tests/fixtures/platform-directory-claude.json?raw";
+import { importAgentResultSchema, platformDirectorySchema } from "./index";
 
 const shared = {
   roleGoal: "Inspect the requested work.",
@@ -93,4 +94,15 @@ describe("importAgentResultSchema", () => {
       }
     });
   }
+});
+
+describe("platformDirectorySchema", () => {
+  it("accepts the shared Rust platform directory fixture", () => {
+    const fixture: unknown = JSON.parse(platformDirectoryFixture);
+
+    const parsed = platformDirectorySchema.parse(fixture);
+
+    expect(parsed.availability).toBe("missing");
+    expect(parsed.platformDetected).toBe(true);
+  });
 });
