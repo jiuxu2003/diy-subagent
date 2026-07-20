@@ -110,6 +110,12 @@ Before implementation:
 - [ ] Identified all layer boundaries
 - [ ] Defined format at each boundary
 - [ ] Decided where validation happens
+- [ ] For Rust enum struct variants, checked both variant casing and inner-field
+      casing (`rename_all_fields`)
+- [ ] For Zod enum-keyed records, explicitly chose exhaustive `z.record` or
+      partial `z.partialRecord`
+- [ ] Used one shared sanitized fixture when Rust serialization and Zod parsing
+      must remain identical
 
 After implementation:
 
