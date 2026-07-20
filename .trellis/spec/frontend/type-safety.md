@@ -69,6 +69,11 @@ Rules:
 - Dates and paths cross IPC as explicit strings/integers with documented
   semantics, not JavaScript `Date` objects or platform-dependent path objects.
 - IDs use branded string types when mixing them would be dangerous.
+- Zod 4 enum-keyed records are exhaustive: use `z.record(enumSchema, value)`
+  only when every key is required, and `z.partialRecord` when imported or
+  editable domain state may contain a subset.
+- For Rust enums with struct variants, require a shared JSON fixture that proves
+  `rename_all_fields = "camelCase"` matches the Zod field names.
 
 ```ts
 const ipcErrorSchema = z.object({

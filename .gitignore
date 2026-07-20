@@ -13,6 +13,20 @@ target
 # Contains mutation testing data
 **/mutants.out*/
 
+# Node / Vite
+node_modules/
+.pnpm-store/
+dist/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+*.log
+
+# Tauri / macOS
+.DS_Store
+src-tauri/gen/
+
 # RustRover
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore

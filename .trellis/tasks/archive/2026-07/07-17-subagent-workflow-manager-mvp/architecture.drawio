@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="28.1.2">
+  <diagram name="MVP Architecture">
+    <mxGraphModel dx="1500" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="2" value="React / TypeScript 前端" style="swimlane;startSize=40;horizontal=1;rounded=1;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;pointerEvents=0;" vertex="1" parent="1">
+          <mxGeometry x="20" y="20" width="300" height="820" as="geometry" />
+        </mxCell>
+        <mxCell id="3" value="Tauri / Rust 应用核心" style="swimlane;startSize=40;horizontal=1;rounded=1;html=1;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;pointerEvents=0;" vertex="1" parent="1">
+          <mxGeometry x="360" y="20" width="760" height="820" as="geometry" />
+        </mxCell>
+        <mxCell id="4" value="用户拥有的原生 Agent 文件" style="swimlane;startSize=40;horizontal=1;rounded=1;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;pointerEvents=0;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="20" width="320" height="820" as="geometry" />
+        </mxCell>
+
+        <mxCell id="5" value="模板库&#xa;6 个内置专家 + 本地个人模板" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="2">
+          <mxGeometry x="30" y="70" width="240" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="6" value="引导式编辑器&#xa;结构化共享核心 + 平台覆盖" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="2">
+          <mxGeometry x="30" y="210" width="240" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="7" value="原生预览与冲突确认&#xa;逐平台校验、diff、写入计划" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="2">
+          <mxGeometry x="30" y="390" width="240" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="8" value="已安装与设置&#xa;逻辑名称聚合、路径、手动刷新" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="2">
+          <mxGeometry x="30" y="620" width="240" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="9" value="Thin Tauri Commands&#xa;严格类型 IPC" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;" vertex="1" parent="3">
+          <mxGeometry x="30" y="70" width="190" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="10" value="Agent Application Service&#xa;discover · import · preview · install" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="3">
+          <mxGeometry x="270" y="70" width="450" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="11" value="Canonical Agent Model&#xa;共享章节 + 强类型平台扩展" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="3">
+          <mxGeometry x="230" y="200" width="300" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="12" value="Template Repository&#xa;文件化正文 + SQLite 索引/设置" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="3">
+          <mxGeometry x="30" y="370" width="210" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="13" value="Path Resolver&#xa;用户覆盖 → 已核验环境变量 → 默认" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;" vertex="1" parent="3">
+          <mxGeometry x="275" y="370" width="210" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="14" value="Adapter Registry&#xa;Claude Markdown/YAML&#xa;Codex TOML&#xa;Cursor Markdown/YAML" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;" vertex="1" parent="3">
+          <mxGeometry x="520" y="360" width="210" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="16" value="Filesystem Watch &amp; Inventory Projection&#xa;防抖事件 + 全量扫描 + 手动刷新" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;" vertex="1" parent="3">
+          <mxGeometry x="30" y="620" width="270" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="15" value="Batch Transaction Coordinator&#xa;预检 → 备份 → 原子替换 → 验证/回滚" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="3">
+          <mxGeometry x="390" y="620" width="330" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="20" value="解析后的用户级 Agent 根目录&#xa;原生文件是安装状态的事实来源" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="4">
+          <mxGeometry x="30" y="70" width="260" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="17" value="Claude Code&#xa;~/.claude/agents/*.md&#xa;YAML frontmatter + Markdown" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="4">
+          <mxGeometry x="30" y="210" width="260" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="18" value="Codex&#xa;~/.codex/agents/*.toml&#xa;standalone TOML config layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="4">
+          <mxGeometry x="30" y="380" width="260" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="19" value="Cursor&#xa;~/.cursor/agents/*.md&#xa;YAML frontmatter + Markdown" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="4">
+          <mxGeometry x="30" y="550" width="260" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="21" value="选择模板" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="5" target="6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="22" value="Draft IPC" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="6" target="9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="23" value="委托" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="9" target="10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="24" value="领域校验" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="10" target="11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="25" value="内容与元数据" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.2;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="11" target="12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="26" value="目录契约" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="11" target="13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="27" value="解析 / 渲染" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.8;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="11" target="14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="28" value="PreviewPlan" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="10" target="7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="340" y="125" />
+              <mxPoint x="340" y="455" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="29" value="确认后的 WritePlan" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.75;entryX=0.5;entryY=1;" edge="1" parent="1" source="7" target="15">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="340" y="465" />
+              <mxPoint x="340" y="780" />
+              <mxPoint x="915" y="780" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="30" value="事务写入" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="15" target="20">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1140" y="690" />
+              <mxPoint x="1140" y="130" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="31" value="文件事件 / 扫描" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;exitX=0;exitY=1;entryX=0.5;entryY=1;" edge="1" parent="1" source="20" target="16">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1140" y="800" />
+              <mxPoint x="525" y="800" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="32" value="Inventory DTO" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="16" target="8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

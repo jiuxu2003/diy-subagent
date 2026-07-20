@@ -1,0 +1,761 @@
+import { ChevronLeft, FileCheck2, Layers3, Save } from "lucide-react";
+import { useState } from "react";
+
+import type {
+  AgentDraft,
+  AgentPlatform,
+  ConflictAction,
+  PlatformOverride,
+  TargetSelection,
+} from "../../../contracts";
+import { Badge } from "../../../components/ui/Badge";
+import { Button } from "../../../components/ui/Button";
+import { Card } from "../../../components/ui/Card";
+import {
+  FieldShell,
+  Input,
+  Select,
+  Textarea,
+} from "../../../components/ui/FormField";
+import { platformLabel } from "../../../lib/formatting/platform";
+
+interface StructuredEditorProps {
+  draft: AgentDraft;
+  targets: TargetSelection[];
+  isPreviewing: boolean;
+  isSavingPersonalTemplate: boolean;
+  error: string | null;
+  onDraftChange: (draft: AgentDraft) => void;
+  onTargetsChange: (targets: TargetSelection[]) => void;
+  onPreview: () => void;
+  onSavePersonalTemplate: (name: string) => void;
+  onBack: () => void;
+  personalTemplateSaveMessage: string | null;
+}
+
+const platforms: AgentPlatform[] = ["claude", "codex", "cursor"];
+
+function createPlatformOverride(platform: AgentPlatform): PlatformOverride {
+  switch (platform) {
+    case "claude":
+      return {
+        platform,
+        config: { tools: [], disallowedTools: [], skills: [] },
+      };
+    case "codex":
+      return { platform, config: { nicknameCandidates: [] } };
+    case "cursor":
+      return { platform, config: {} };
+    default: {
+      const exhaustive: never = platform;
+      return exhaustive;
+    }
+  }
+}
+
+export function StructuredEditor({
+  draft,
+  targets,
+  isPreviewing,
+  isSavingPersonalTemplate,
+  error,
+  onDraftChange,
+  onTargetsChange,
+  onPreview,
+  onSavePersonalTemplate,
+  onBack,
+  personalTemplateSaveMessage,
+}: StructuredEditorProps) {
+  const [personalTemplateName, setPersonalTemplateName] = useState(
+    `${draft.logicalName} 模板`,
+  );
+  const updateShared = <Key extends keyof AgentDraft["shared"]>(
+    key: Key,
+    value: AgentDraft["shared"][Key],
+  ) => {
+    onDraftChange({ ...draft, shared: { ...draft.shared, [key]: value } });
+  };
+  const updateUsage = <Key extends keyof AgentDraft["usage"]>(
+    key: Key,
+    value: AgentDraft["usage"][Key],
+  ) => {
+    onDraftChange({ ...draft, usage: { ...draft.usage, [key]: value } });
+  };
+
+  return (
+    <section
+      aria-labelledby="agent-editor-heading"
+      className="mx-auto max-w-5xl space-y-6"
+    >
+      <header className="flex items-start justify-between gap-6">
+        <div>
+          <Button onClick={onBack} size="sm" variant="ghost">
+            <ChevronLeft className="size-4" aria-hidden="true" />
+            返回模板库
+          </Button>
+          <h1
+            id="agent-editor-heading"
+            className="mt-4 text-3xl font-bold tracking-tight"
+          >
+            定制共享工作契约
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
+            编辑产品语义，而不是
+            YAML/TOML。平台适配器会生成原生格式并标记无法精确映射的能力。
+          </p>
+        </div>
+        <div className="rounded-2xl bg-[var(--accent-soft)] px-4 py-3 text-right">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--accent-strong)]">
+            当前 Agent
+          </p>
+          <p className="mt-1 font-mono text-sm font-semibold">
+            {draft.logicalName}
+          </p>
+        </div>
+      </header>
+
+      {error
+        ? (
+          <div
+            className="rounded-2xl border border-[var(--danger-border)] bg-[var(--danger-soft)] px-5 py-4 text-sm font-medium text-[var(--danger)]"
+            role="alert"
+          >
+            {error}
+          </div>
+        )
+        : null}
+
+      <EditorSection
+        icon={<FileCheck2 className="size-5" aria-hidden="true" />}
+        title="身份与委派描述"
+        description="名称决定文件和调用标识；描述决定 Agent 何时自动委派。"
+      >
+        <div className="grid grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] gap-5">
+          <FieldShell
+            htmlFor="logical-name"
+            label="逻辑名称"
+            hint="原生字段 name"
+          >
+            <Input
+              id="logical-name"
+              onChange={(event) => {
+                onDraftChange({
+                  ...draft,
+                  logicalName: event.currentTarget.value,
+                });
+              }}
+              spellCheck={false}
+              value={draft.logicalName}
+            />
+          </FieldShell>
+          <FieldShell
+            htmlFor="description"
+            label="委派描述"
+            hint="说明何时使用，也说明何时不要使用"
+          >
+            <Textarea
+              id="description"
+              onChange={(event) => {
+                onDraftChange({
+                  ...draft,
+                  description: event.currentTarget.value,
+                });
+              }}
+              value={draft.description}
+            />
+          </FieldShell>
+        </div>
+      </EditorSection>
+
+      <EditorSection
+        icon={<Layers3 className="size-5" aria-hidden="true" />}
+        title="共享语义章节"
+        description="每章都可独立验证，避免退化为一段无边界的大 Prompt。"
+      >
+        <div className="space-y-5">
+          <TextField
+            id="role-goal"
+            label="角色目标"
+            value={draft.shared.roleGoal}
+            onChange={(value) => {
+              updateShared("roleGoal", value);
+            }}
+          />
+          <div className="grid grid-cols-2 gap-5">
+            <ListField
+              id="when-to-use"
+              label="适用场景"
+              values={draft.shared.whenToUse}
+              onChange={(value) => {
+                updateShared("whenToUse", value);
+              }}
+            />
+            <ListField
+              id="when-not-to-use"
+              label="禁用场景"
+              values={draft.shared.whenNotToUse}
+              onChange={(value) => {
+                updateShared("whenNotToUse", value);
+              }}
+            />
+            <ListField
+              id="input-requirements"
+              label="输入要求"
+              values={draft.shared.inputRequirements}
+              onChange={(value) => {
+                updateShared("inputRequirements", value);
+              }}
+            />
+            <ListField
+              id="execution-steps"
+              label="执行步骤"
+              values={draft.shared.executionSteps}
+              onChange={(value) => {
+                updateShared("executionSteps", value);
+              }}
+            />
+          </div>
+          <TextField
+            id="output-contract"
+            label="输出契约"
+            value={draft.shared.outputContract}
+            onChange={(value) => {
+              updateShared("outputContract", value);
+            }}
+          />
+          <div className="grid grid-cols-2 gap-5">
+            <ListField
+              id="constraints"
+              label="约束"
+              values={draft.shared.constraints}
+              onChange={(value) => {
+                updateShared("constraints", value);
+              }}
+            />
+            <ListField
+              id="stop-conditions"
+              label="停止条件"
+              values={draft.shared.stopConditions}
+              onChange={(value) => {
+                updateShared("stopConditions", value);
+              }}
+            />
+          </div>
+          <TextField
+            id="failure-handling"
+            label="失败处理"
+            value={draft.shared.failureHandling}
+            onChange={(value) => {
+              updateShared("failureHandling", value);
+            }}
+          />
+        </div>
+      </EditorSection>
+
+      <EditorSection
+        title="语言与使用契约"
+        description="安装后直接告诉你怎么调用、怎么验证。"
+      >
+        <div className="grid grid-cols-2 gap-5">
+          <FieldShell htmlFor="response-language" label="响应语言">
+            <Select
+              id="response-language"
+              onChange={(event) => {
+                onDraftChange({
+                  ...draft,
+                  responseLanguage: event.currentTarget
+                    .value as AgentDraft["responseLanguage"],
+                });
+              }}
+              value={draft.responseLanguage}
+            >
+              <option value="followUser">跟随用户输入</option>
+              <option value="simplifiedChinese">简体中文</option>
+              <option value="english">English</option>
+            </Select>
+          </FieldShell>
+          <ListField
+            id="invocation-examples"
+            label="显式调用示例"
+            values={draft.usage.explicitInvocationExamples}
+            onChange={(value) => {
+              updateUsage("explicitInvocationExamples", value);
+            }}
+          />
+          <TextField
+            id="delegation-guidance"
+            label="自动委派建议"
+            value={draft.usage.autoDelegationGuidance}
+            onChange={(value) => {
+              updateUsage("autoDelegationGuidance", value);
+            }}
+          />
+          <TextField
+            id="verification-task"
+            label="安装后验证任务"
+            value={draft.usage.verificationTask}
+            onChange={(value) => {
+              updateUsage("verificationTask", value);
+            }}
+          />
+        </div>
+      </EditorSection>
+
+      <EditorSection
+        title="目标平台与高级字段"
+        description="每个平台独立生成、校验和预览。"
+      >
+        <div className="space-y-4">
+          {platforms.map((platform) => (
+            <PlatformTarget
+              draft={draft}
+              key={platform}
+              onDraftChange={onDraftChange}
+              onTargetsChange={onTargetsChange}
+              platform={platform}
+              targets={targets}
+            />
+          ))}
+        </div>
+      </EditorSection>
+
+      <EditorSection
+        icon={<Save className="size-5" aria-hidden="true" />}
+        title="保存为个人模板"
+        description="模板正文保存在本机 Application Support，后续可继续离线使用。"
+      >
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4">
+          <FieldShell htmlFor="personal-template-name" label="模板名称">
+            <Input
+              id="personal-template-name"
+              onChange={(event) => {
+                setPersonalTemplateName(event.currentTarget.value);
+              }}
+              value={personalTemplateName}
+            />
+          </FieldShell>
+          <Button
+            disabled={isSavingPersonalTemplate ||
+              personalTemplateName.trim().length === 0}
+            onClick={() => {
+              onSavePersonalTemplate(personalTemplateName.trim());
+            }}
+            variant="secondary"
+          >
+            {isSavingPersonalTemplate ? "正在保存…" : "保存个人模板"}
+          </Button>
+        </div>
+        {personalTemplateSaveMessage
+          ? (
+            <p className="mt-3 text-sm text-[var(--text-muted)]" role="status">
+              {personalTemplateSaveMessage}
+            </p>
+          )
+          : null}
+      </EditorSection>
+
+      <footer className="sticky bottom-4 flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4 shadow-xl backdrop-blur-xl">
+        <div>
+          <p className="text-sm font-semibold">
+            已选择 {targets.length} 个目标
+          </p>
+          <p className="text-xs text-[var(--text-muted)]">
+            预览不会写入磁盘；只有确认后的单次 token 才能提交。
+          </p>
+        </div>
+        <Button
+          disabled={isPreviewing || targets.length === 0}
+          onClick={onPreview}
+          size="lg"
+        >
+          {isPreviewing ? "正在生成原生预览…" : "生成三平台原生预览"}
+        </Button>
+      </footer>
+    </section>
+  );
+}
+
+function EditorSection({
+  title,
+  description,
+  icon,
+  children,
+}: {
+  title: string;
+  description: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card className="p-6">
+      <div className="mb-6 flex items-start gap-3">
+        {icon
+          ? (
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent-strong)]">
+              {icon}
+            </span>
+          )
+          : null}
+        <div>
+          <h2 className="text-lg font-bold">{title}</h2>
+          <p className="mt-1 text-sm text-[var(--text-muted)]">{description}</p>
+        </div>
+      </div>
+      {children}
+    </Card>
+  );
+}
+
+function TextField({
+  id,
+  label,
+  value,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <FieldShell htmlFor={id} label={label}>
+      <Textarea
+        id={id}
+        onChange={(event) => {
+          onChange(event.currentTarget.value);
+        }}
+        value={value}
+      />
+    </FieldShell>
+  );
+}
+
+function ListField({
+  id,
+  label,
+  values,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  values: string[];
+  onChange: (values: string[]) => void;
+}) {
+  return (
+    <FieldShell htmlFor={id} hint="每行一项" label={label}>
+      <Textarea
+        id={id}
+        onChange={(event) => {
+          onChange(lines(event.currentTarget.value));
+        }}
+        value={values.join("\n")}
+      />
+    </FieldShell>
+  );
+}
+
+function PlatformTarget({
+  platform,
+  draft,
+  targets,
+  onDraftChange,
+  onTargetsChange,
+}: {
+  platform: AgentPlatform;
+  draft: AgentDraft;
+  targets: TargetSelection[];
+  onDraftChange: (draft: AgentDraft) => void;
+  onTargetsChange: (targets: TargetSelection[]) => void;
+}) {
+  const selected = targets.find((target) => target.platform === platform);
+  const platformOverride = draft.platformOverrides[platform] ??
+    createPlatformOverride(platform);
+  const importedPlatform = draft.provenance.kind === "imported"
+    ? Object.keys(draft.platformOverrides)[0]
+    : undefined;
+  const disabled = draft.provenance.kind === "imported" &&
+    importedPlatform !== platform;
+
+  const toggle = () => {
+    if (selected) {
+      onTargetsChange(targets.filter((target) => target.platform !== platform));
+      return;
+    }
+    if (draft.platformOverrides[platform] === undefined) {
+      onDraftChange({
+        ...draft,
+        platformOverrides: {
+          ...draft.platformOverrides,
+          [platform]: platformOverride,
+        },
+      });
+    }
+    onTargetsChange([...targets, { platform, conflictAction: "fail" }]);
+  };
+
+  return (
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+      <div className="flex items-center justify-between gap-4">
+        <label className="flex items-center gap-3 font-semibold">
+          <input
+            checked={Boolean(selected)}
+            className="size-4 accent-[var(--accent)]"
+            disabled={disabled}
+            onChange={toggle}
+            type="checkbox"
+          />
+          {platformLabel(platform)}
+          {disabled ? <Badge>导入首版仅写回原平台</Badge> : null}
+        </label>
+        {selected
+          ? (
+            <Select
+              aria-label={`${platformLabel(platform)} 冲突策略`}
+              className="w-48 py-2"
+              onChange={(event) => {
+                onTargetsChange(
+                  targets.map((target) =>
+                    target.platform === platform
+                      ? {
+                        ...target,
+                        conflictAction: event.currentTarget
+                          .value as ConflictAction,
+                      }
+                      : target
+                  ),
+                );
+              }}
+              value={selected.conflictAction}
+            >
+              <option value="fail">冲突时阻止</option>
+              <option value="replaceAfterBackup">备份后替换</option>
+            </Select>
+          )
+          : null}
+      </div>
+      {selected
+        ? (
+          <PlatformAdvancedFields
+            draft={draft}
+            onChange={onDraftChange}
+            platform={platform}
+            value={platformOverride}
+          />
+        )
+        : null}
+    </div>
+  );
+}
+
+function PlatformAdvancedFields({
+  platform,
+  value,
+  draft,
+  onChange,
+}: {
+  platform: AgentPlatform;
+  value: PlatformOverride;
+  draft: AgentDraft;
+  onChange: (draft: AgentDraft) => void;
+}) {
+  const update = (next: PlatformOverride) => {
+    onChange({
+      ...draft,
+      platformOverrides: { ...draft.platformOverrides, [platform]: next },
+    });
+  };
+
+  if (value.platform === "claude") {
+    return (
+      <div className="mt-4 grid grid-cols-3 gap-4 border-t border-[var(--border)] pt-4">
+        <FieldShell htmlFor="claude-model" label="model">
+          <Input
+            id="claude-model"
+            onChange={(event) => {
+              update({
+                ...value,
+                config: {
+                  ...value.config,
+                  model: nullable(event.currentTarget.value),
+                },
+              });
+            }}
+            placeholder="inherit"
+            value={value.config.model ?? ""}
+          />
+        </FieldShell>
+        <FieldShell htmlFor="claude-permission" label="permissionMode">
+          <Select
+            id="claude-permission"
+            onChange={(event) => {
+              update({
+                ...value,
+                config: {
+                  ...value.config,
+                  permissionMode: nullable(event.currentTarget.value),
+                },
+              });
+            }}
+            value={value.config.permissionMode ?? ""}
+          >
+            <option value="">继承</option>
+            <option value="plan">plan</option>
+            <option value="default">default</option>
+            <option value="acceptEdits">acceptEdits</option>
+            <option value="dontAsk">dontAsk</option>
+          </Select>
+        </FieldShell>
+        <FieldShell htmlFor="claude-tools" label="tools" hint="逗号分隔">
+          <Input
+            id="claude-tools"
+            onChange={(event) => {
+              update({
+                ...value,
+                config: {
+                  ...value.config,
+                  tools: commaItems(event.currentTarget.value),
+                },
+              });
+            }}
+            value={value.config.tools.join(", ")}
+          />
+        </FieldShell>
+      </div>
+    );
+  }
+  if (value.platform === "codex") {
+    return (
+      <div className="mt-4 grid grid-cols-3 gap-4 border-t border-[var(--border)] pt-4">
+        <FieldShell htmlFor="codex-model" label="model">
+          <Input
+            id="codex-model"
+            onChange={(event) => {
+              update({
+                ...value,
+                config: {
+                  ...value.config,
+                  model: nullable(event.currentTarget.value),
+                },
+              });
+            }}
+            placeholder="继承父会话"
+            value={value.config.model ?? ""}
+          />
+        </FieldShell>
+        <FieldShell htmlFor="codex-effort" label="model_reasoning_effort">
+          <Select
+            id="codex-effort"
+            onChange={(event) => {
+              update({
+                ...value,
+                config: {
+                  ...value.config,
+                  modelReasoningEffort: nullable(event.currentTarget.value),
+                },
+              });
+            }}
+            value={value.config.modelReasoningEffort ?? ""}
+          >
+            <option value="">继承</option>
+            <option value="low">low</option>
+            <option value="medium">medium</option>
+            <option value="high">high</option>
+          </Select>
+        </FieldShell>
+        <FieldShell htmlFor="codex-sandbox" label="sandbox_mode">
+          <Select
+            id="codex-sandbox"
+            onChange={(event) => {
+              update({
+                ...value,
+                config: {
+                  ...value.config,
+                  sandboxMode: nullable(event.currentTarget.value),
+                },
+              });
+            }}
+            value={value.config.sandboxMode ?? ""}
+          >
+            <option value="">继承</option>
+            <option value="read-only">read-only</option>
+            <option value="workspace-write">workspace-write</option>
+            <option value="danger-full-access">danger-full-access</option>
+          </Select>
+        </FieldShell>
+      </div>
+    );
+  }
+  return (
+    <div className="mt-4 grid grid-cols-3 gap-4 border-t border-[var(--border)] pt-4">
+      <FieldShell htmlFor="cursor-model" label="model">
+        <Input
+          id="cursor-model"
+          onChange={(event) => {
+            update({
+              ...value,
+              config: {
+                ...value.config,
+                model: nullable(event.currentTarget.value),
+              },
+            });
+          }}
+          placeholder="inherit"
+          value={value.config.model ?? ""}
+        />
+      </FieldShell>
+      <label className="flex items-center gap-3 self-end rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-semibold">
+        <input
+          checked={value.config.readonly ?? false}
+          className="size-4 accent-[var(--accent)]"
+          onChange={(event) => {
+            update({
+              ...value,
+              config: {
+                ...value.config,
+                readonly: event.currentTarget.checked,
+              },
+            });
+          }}
+          type="checkbox"
+        />
+        readonly
+      </label>
+      <label className="flex items-center gap-3 self-end rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-semibold">
+        <input
+          checked={value.config.isBackground ?? false}
+          className="size-4 accent-[var(--accent)]"
+          onChange={(event) => {
+            update({
+              ...value,
+              config: {
+                ...value.config,
+                isBackground: event.currentTarget.checked,
+              },
+            });
+          }}
+          type="checkbox"
+        />
+        is_background
+      </label>
+    </div>
+  );
+}
+
+function lines(value: string): string[] {
+  return value
+    .split("\n")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function commaItems(value: string): string[] {
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function nullable(value: string): string | null {
+  const normalized = value.trim();
+  return normalized.length === 0 ? null : normalized;
+}

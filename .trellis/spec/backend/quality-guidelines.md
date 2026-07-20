@@ -225,6 +225,130 @@ atomic write, and read-back verification.
 
 ---
 
+## Scenario: Rust DTO and Zod Contract Synchronization
+
+### 1. Scope / Trigger
+
+Apply this contract whenever a Rust enum with struct variants or an enum-keyed
+map crosses Tauri IPC. These shapes are easy to compile independently while
+serializing into JSON that the frontend rejects.
+
+### 2. Signatures
+
+```rust
+#[serde(
+    tag = "kind",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
+enum DraftProvenance {
+    Imported {
+        source_id: String,
+        expected_revision: String,
+    },
+}
+```
+
+```ts
+const agentDraftSchema = z.object({
+  platformOverrides: z.partialRecord(
+    agentPlatformSchema,
+    platformOverrideSchema,
+  ),
+});
+```
+
+### 3. Contracts
+
+- `rename_all` controls enum variant names; `rename_all_fields` is required for
+  fields inside every struct variant.
+- Imported drafts contain only their native platform override. Template drafts
+  may also be partial while editing; the backend completes missing explicit
+  defaults before persisting a personal template that declares all platforms.
+- In Zod 4, `z.record(z.enum(...), valueSchema)` is exhaustive. Use
+  `z.partialRecord` only when missing enum keys are valid domain state.
+- A platform override key must match the discriminated `platform` in its value;
+  Rust domain validation remains authoritative for this invariant.
+- Rust serialization and Zod parsing share a checked-in sanitized JSON fixture.
+  Inline look-alike fixtures do not satisfy the cross-language contract.
+- A platform-scoped inventory refresh replaces registry entries only for the
+  refreshed platforms; sources from other platforms remain addressable.
+- Recovery commands accept an opaque UUID such as `recoveryId`, never a path.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required result |
+|-----------|-----------------|
+| Struct-variant field serializes as `source_id` | Contract test fails; add `rename_all_fields = "camelCase"` |
+| Imported draft contains one platform override | Zod accepts it; backend restricts write-back to that platform |
+| Override key and value platform differ | `agent.platform_override_mismatch` |
+| Personal template declares a platform without an override | Complete the default before persistence or reject the package |
+| Scoped refresh removes an unrelated platform source | Registry regression test fails |
+| Recovery identifier is not a UUID or directory is missing | `agent.validation_failed` or `resource.not_found`; no Finder call |
+
+### 5. Good / Base / Bad Cases
+
+- Good: Rust serializes an imported Claude draft with `sourceId`, Zod parses the
+  shared fixture, and only the Claude override is present.
+- Base: a built-in template contains all three overrides and renders
+  deterministically for every adapter.
+- Bad: use exhaustive `z.record` for an imported draft and reject the valid
+  single-platform payload.
+- Bad: refresh Claude inventory by replacing the complete source registry,
+  invalidating a still-visible Codex `sourceId`.
+
+### 6. Tests Required
+
+- One sanitized JSON fixture serialized by Rust and parsed by Zod.
+- Serialization assertion for recovery struct fields such as `recoveryId`.
+- Single-platform import fixtures for Claude, Codex, and Cursor.
+- Personal-template persistence from an imported single-platform draft.
+- Scoped inventory refresh preserving unrelated platform sources.
+- Three-platform preview -> commit -> scan integration using temporary roots.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```rust
+#[serde(tag = "kind", rename_all = "camelCase")]
+enum DraftProvenance {
+    Imported { source_id: String },
+}
+```
+
+```ts
+platformOverrides: z.record(agentPlatformSchema, platformOverrideSchema)
+```
+
+The Rust field remains `source_id`, while Zod also incorrectly requires every
+platform key.
+
+#### Correct
+
+```rust
+#[serde(
+    tag = "kind",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
+enum DraftProvenance {
+    Imported { source_id: String },
+}
+```
+
+```ts
+platformOverrides: z.partialRecord(
+  agentPlatformSchema,
+  platformOverrideSchema,
+)
+```
+
+The serialized field and runtime schema now describe the same valid partial
+draft state.
+
+---
+
 ## Code Review Checklist
 
 - [ ] The change has one clear owning layer.
@@ -236,4 +360,6 @@ atomic write, and read-back verification.
 - [ ] Logs and error payloads are free of secrets and full user paths.
 - [ ] Database changes include an immutable migration and upgrade test.
 - [ ] Tests exercise real adapters and failure paths, not only the happy path.
+- [ ] Rust enum struct variants and Zod enum-keyed records use the intended
+      casing and exhaustiveness semantics, backed by a shared fixture.
 - [ ] The diff does not introduce duplicated platform mapping tables.
