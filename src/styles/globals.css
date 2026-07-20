@@ -1,0 +1,129 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans:
+    Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-mono:
+    "SFMono-Regular", ui-monospace, Menlo, Monaco, Consolas, monospace;
+}
+
+:root {
+  --background: #f3f5f8;
+  --surface: #ffffff;
+  --surface-raised: rgba(255, 255, 255, 0.92);
+  --surface-hover: #eef1f6;
+  --surface-muted: #e7ebf1;
+  --sidebar: rgba(244, 246, 250, 0.9);
+  --text: #172033;
+  --text-muted: #5e697c;
+  --text-subtle: #8b95a7;
+  --border: rgba(73, 88, 117, 0.16);
+  --border-strong: rgba(73, 88, 117, 0.28);
+  --accent: #5b65f5;
+  --accent-strong: #4650dc;
+  --accent-soft: #e9eaff;
+  --focus: #6b73ff;
+  --focus-soft: rgba(91, 101, 245, 0.18);
+  --success: #16845b;
+  --success-soft: #dcf7eb;
+  --warning: #9c6507;
+  --warning-soft: #fff1cf;
+  --danger: #c23e4b;
+  --danger-strong: #a92d3a;
+  --danger-soft: #ffe5e7;
+  --danger-border: rgba(194, 62, 75, 0.32);
+  --shadow-card: 0 12px 32px rgba(38, 50, 77, 0.07);
+  --shadow-window: 0 24px 80px rgba(30, 39, 62, 0.12);
+}
+
+.dark {
+  --background: #11151d;
+  --surface: #191f2a;
+  --surface-raised: rgba(27, 34, 46, 0.94);
+  --surface-hover: #252d3a;
+  --surface-muted: #2c3544;
+  --sidebar: rgba(20, 26, 35, 0.92);
+  --text: #eef2f8;
+  --text-muted: #adb7c7;
+  --text-subtle: #7d899b;
+  --border: rgba(180, 193, 215, 0.14);
+  --border-strong: rgba(180, 193, 215, 0.25);
+  --accent: #7880ff;
+  --accent-strong: #9298ff;
+  --accent-soft: rgba(120, 128, 255, 0.17);
+  --focus: #9298ff;
+  --focus-soft: rgba(146, 152, 255, 0.19);
+  --success: #5ed2a5;
+  --success-soft: rgba(63, 180, 132, 0.15);
+  --warning: #f0bd63;
+  --warning-soft: rgba(223, 159, 55, 0.16);
+  --danger: #ff8b94;
+  --danger-strong: #ffabb1;
+  --danger-soft: rgba(226, 79, 91, 0.16);
+  --danger-border: rgba(255, 139, 148, 0.3);
+  --shadow-card: 0 14px 34px rgba(0, 0, 0, 0.22);
+  --shadow-window: 0 28px 90px rgba(0, 0, 0, 0.38);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
+  color: var(--text);
+  font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  min-width: 1120px;
+  min-height: 100vh;
+  background:
+    radial-gradient(
+      circle at 12% 10%,
+      rgba(113, 123, 255, 0.09),
+      transparent 28%
+    ),
+    radial-gradient(
+    circle at 90% 90%,
+    rgba(48, 178, 133, 0.07),
+    transparent 24%
+  ),
+    var(--background);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+code,
+pre {
+  font-family: var(--font-mono);
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

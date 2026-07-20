@@ -1,0 +1,50 @@
+{
+  "draft": {
+    "logicalName": "imported-agent",
+    "description": "Imported native agent.",
+    "shared": {
+      "roleGoal": "Inspect the requested work.",
+      "whenToUse": ["The task needs focused analysis."],
+      "whenNotToUse": ["The task is already complete."],
+      "inputRequirements": ["The original request."],
+      "executionSteps": ["Inspect the evidence."],
+      "outputContract": "Return a verifiable result.",
+      "constraints": ["Do not invent evidence."],
+      "stopConditions": ["The result is verified."],
+      "failureHandling": "Report the missing evidence."
+    },
+    "responseLanguage": "followUser",
+    "usage": {
+      "explicitInvocationExamples": ["Inspect this task."],
+      "autoDelegationGuidance": "Use for focused analysis.",
+      "verificationTask": "Verify the result against the source."
+    },
+    "platformOverrides": {
+      "claude": {
+        "platform": "claude",
+        "config": {
+          "model": null,
+          "effort": null,
+          "permissionMode": null,
+          "tools": [],
+          "disallowedTools": [],
+          "maxTurns": null,
+          "skills": [],
+          "memory": null,
+          "background": null,
+          "isolation": null
+        }
+      }
+    },
+    "provenance": {
+      "kind": "imported",
+      "sourceId": "source-id",
+      "expectedRevision": "revision"
+    }
+  },
+  "platform": "claude",
+  "sourceId": "source-id",
+  "sourceRevision": "revision",
+  "adapterContractVersion": "claude-subagent-2026-07",
+  "preservedFields": ["unknown_field"]
+}
