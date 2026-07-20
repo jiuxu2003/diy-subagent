@@ -2,14 +2,14 @@
 
 ## 有序清单
 
-1. [ ] `tauri.conf.json`：`bundle.targets` 改为 `["app", "dmg"]`；本地 `pnpm tauri:build` 跑一次确认 dmg 产出（顺带覆盖 AC6 的本地路径验证）。
-2. [ ] 新增 `.github/workflows/ci.yml`：双 job（frontend@ubuntu / rust@macos）、`workflow_call` 出口、pnpm + cargo + Playwright 三层缓存、concurrency 取消旧 run、rust job 前置 `mkdir -p dist`（见 design 坑 1）。
-3. [ ] 新增 `.github/workflows/release.yml`：`v*` tag 触发 → version-check（内联脚本，见 design 坑 2）→ `uses` ci.yml → tauri-action 构建并挂 draft release（`releaseDraft: true`，body 含放行指引，env 预留签名变量）。
-4. [ ] README 增补"下载与安装"段：Release 下载入口 + 未签名 app 首次打开指引。
-5. [ ] 本地静态验证：YAML 语法自检（有 actionlint 就跑，没有则靠 `gh api` dry 校验或人工复核）；`pnpm lint` / `pnpm typecheck` / `pnpm test` 全绿确认无意外改动。
-6. [ ] 推送分支并开 PR → 观察 ci workflow 实跑（AC1）；重点确认 rust job 的 `mkdir -p dist` 坑是否成立。
-7. [ ] 合并 main 后打 `v0.1.0` tag → 验证 draft release + dmg 附件（AC2）；下载 dmg 本机挂载、放行、启动（AC4）。
-8. [ ] AC3 验证：打一个与三处版本不一致的临时 tag（如 `v0.0.1-mismatch`），确认 workflow fail 且无 draft 产生，验证后删除该 tag 与失败 run 记录。
+1. [x] `tauri.conf.json`：`bundle.targets` 改为 `["app", "dmg"]`；本地 `pnpm tauri:build` 跑一次确认 dmg 产出（顺带覆盖 AC6 的本地路径验证）。→ 已产出 `DIY Subagent_0.1.0_aarch64.dmg`（3.0M）
+2. [x] 新增 `.github/workflows/ci.yml`：双 job（frontend@ubuntu / rust@macos）、`workflow_call` 出口、pnpm + cargo + Playwright 三层缓存、concurrency 取消旧 run、rust job 前置 `mkdir -p dist`（见 design 坑 1）。
+3. [x] 新增 `.github/workflows/release.yml`：`v*` tag 触发 → version-check（内联脚本，见 design 坑 2）→ `uses` ci.yml → tauri-action 构建并挂 draft release（`releaseDraft: true`，body 含放行指引；签名 env 以注释块预留，避免空 secrets 误触发签名流程）。
+4. [x] README 增补"下载与安装"段：Release 下载入口 + 未签名 app 首次打开指引。
+5. [x] 本地静态验证：PyYAML 语法校验通过；`pnpm lint` / `pnpm test` 全绿（`tsc -b` 已随本地 tauri build 一并通过）。
+6. [x] 推送分支（PR #2 已存在，推送自动更新）→ ci workflow 实跑通过（AC1）：Frontend 1m02s / Rust 2m33s，`mkdir -p dist` 坑方案在 CI 实测成立。
+7. [x] 合并 main 后打 `v0.1.0` tag → draft release 由 bot 创建，附件含 `DIY.Subagent_0.1.0_aarch64.dmg` 与 `app.tar.gz`（AC2）；dmg 下载后挂载成功、app 从卷内正常启动（进程实测存在）后退出（AC4）。产物为 arm64 ad-hoc 签名，符合 D1。
+8. [x] AC3 验证：`v0.0.1-mismatch` tag 在 version-check 一步 6 秒内失败（错误信息含三处版本号），下游 job 未执行、无 draft 产生；测试 tag 与失败 run 记录已删除。
 
 ## 验证命令
 
