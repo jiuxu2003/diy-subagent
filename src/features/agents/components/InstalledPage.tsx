@@ -25,6 +25,10 @@ import {
   useNativeAgentContent,
   useRevealAgentSource,
 } from "../hooks/useAgents";
+import {
+  platformInstallStatuses,
+  type PlatformInstallStatus,
+} from "../lib/platformStatus";
 
 export function InstalledPage(
   { onImported }: { onImported: (draft: AgentDraft) => void },
@@ -93,8 +97,16 @@ export function InstalledPage(
       {inventory.error
         ? <InventoryState title={errorMessage(inventory.error)} />
         : null}
-      {inventory.data && inventory.data.groups.length === 0
+      {inventory.data && inventory.data.groups.length === 0 &&
+          inventory.data.directories.length === 0
         ? <InventoryState title="三个用户级目录中还没有发现原生 Agent 文件。" />
+        : null}
+      {inventory.data
+        ? (
+          <PlatformStatusBanners
+            statuses={platformInstallStatuses(inventory.data)}
+          />
+        )
         : null}
       {inventory.data
         ? (
@@ -112,6 +124,34 @@ export function InstalledPage(
         )
         : null}
     </section>
+  );
+}
+
+function PlatformStatusBanners(
+  { statuses }: { statuses: PlatformInstallStatus[] },
+) {
+  const pending = statuses.filter((status) => !status.hasSources);
+  if (pending.length === 0) {
+    return null;
+  }
+  return (
+    <div className="grid gap-3 sm:grid-cols-3">
+      {pending.map((status) => (
+        <Card
+          className="flex items-center gap-3 px-4 py-3"
+          key={status.platform}
+        >
+          <Badge tone={status.platformDetected ? "success" : "warning"}>
+            {status.platformDetected ? "已安装" : "未检测到"}
+          </Badge>
+          <p className="text-sm text-[var(--text-muted)]">
+            {status.platformDetected
+              ? `已安装 ${platformLabel(status.platform)}，暂无 subagent`
+              : `未检测到 ${platformLabel(status.platform)}`}
+          </p>
+        </Card>
+      ))}
+    </div>
   );
 }
 

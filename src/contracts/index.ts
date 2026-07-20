@@ -157,6 +157,7 @@ export const platformDirectorySchema = z.object({
   absolutePath: z.string(),
   source: directorySourceSchema,
   availability: directoryAvailabilitySchema,
+  platformDetected: z.boolean(),
   canRead: z.boolean(),
   canWrite: z.boolean(),
 });

@@ -107,11 +107,20 @@ impl PlatformPathResolver {
             }
         };
 
+        // Platform detection is always based on the default platform root
+        // (e.g. `~/.claude`); a user override only changes where agent files
+        // are written, not whether the platform is installed.
+        let platform_detected = self
+            .home_dir
+            .join(platform.default_platform_root())
+            .is_dir();
+
         PlatformDirectory {
             platform,
             absolute_path: path.to_string_lossy().into_owned(),
             source,
             availability,
+            platform_detected,
             can_read,
             can_write,
         }
@@ -145,5 +154,40 @@ mod tests {
             .expect("directory resolves");
 
         assert_eq!(directory.availability, DirectoryAvailability::Missing);
+        assert!(!directory.platform_detected);
+    }
+
+    #[test]
+    fn platform_root_without_agents_subdirectory_is_detected() {
+        let home = TempDir::new().expect("temporary home");
+        std::fs::create_dir(home.path().join(".claude")).expect("platform root created");
+        let database = Arc::new(Database::in_memory().expect("database initializes"));
+        let resolver =
+            PlatformPathResolver::new(home.path().to_path_buf(), database, Arc::new(SystemClock));
+
+        let directory = resolver
+            .resolve(AgentPlatform::Claude)
+            .expect("directory resolves");
+
+        assert_eq!(directory.availability, DirectoryAvailability::Missing);
+        assert!(directory.platform_detected);
+    }
+
+    #[test]
+    fn override_keeps_detection_bound_to_default_platform_root() {
+        let home = TempDir::new().expect("temporary home");
+        let override_dir = TempDir::new().expect("override directory");
+        let database = Arc::new(Database::in_memory().expect("database initializes"));
+        let resolver =
+            PlatformPathResolver::new(home.path().to_path_buf(), database, Arc::new(SystemClock));
+
+        let directory = resolver
+            .set_override(AgentPlatform::Codex, override_dir.path())
+            .expect("override applies");
+
+        // The override directory exists, but `~/.codex` does not, so the
+        // platform itself is still reported as not detected.
+        assert_eq!(directory.availability, DirectoryAvailability::Ready);
+        assert!(!directory.platform_detected);
     }
 }

@@ -29,6 +29,17 @@ impl AgentPlatform {
         }
     }
 
+    /// Platform installation root (parent of the agents directory). The
+    /// presence of this directory means the platform itself is installed,
+    /// even when the agents subdirectory has not been created yet.
+    pub const fn default_platform_root(self) -> &'static str {
+        match self {
+            Self::Claude => ".claude",
+            Self::Codex => ".codex",
+            Self::Cursor => ".cursor",
+        }
+    }
+
     pub const fn extension(self) -> &'static str {
         match self {
             Self::Claude | Self::Cursor => "md",

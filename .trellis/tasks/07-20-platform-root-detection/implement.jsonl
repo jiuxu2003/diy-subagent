@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "Backend layering rules for domain/dto/infrastructure changes"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Rust quality bar: fmt/clippy/test expectations"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "TanStack Query ownership rules for combining inventory + platform directories queries"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "zod contract rules for the new platformDetected field"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "IPC contract chain must change together: DTO + zod + fixtures + tests"}

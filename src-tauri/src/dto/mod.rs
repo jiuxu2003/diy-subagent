@@ -212,6 +212,26 @@ mod tests {
     }
 
     #[test]
+    fn platform_directory_matches_the_shared_frontend_fixture() {
+        let directory = PlatformDirectory {
+            platform: AgentPlatform::Claude,
+            absolute_path: "/Users/example/.claude/agents".to_owned(),
+            source: crate::domain::agents::DirectorySource::Default,
+            availability: crate::domain::agents::DirectoryAvailability::Missing,
+            platform_detected: true,
+            can_read: false,
+            can_write: false,
+        };
+        let actual = serde_json::to_value(directory).expect("directory serializes");
+        let expected: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../tests/fixtures/platform-directory-claude.json"
+        ))
+        .expect("shared fixture parses");
+
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
     fn recovery_action_struct_fields_use_camel_case() {
         let error = AppError::new(
             crate::error::AppErrorKind::RollbackFailed,

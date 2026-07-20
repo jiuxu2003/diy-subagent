@@ -25,6 +25,9 @@ pub struct PlatformDirectory {
     pub absolute_path: String,
     pub source: DirectorySource,
     pub availability: DirectoryAvailability,
+    /// True when the platform root directory (e.g. `~/.claude`) exists,
+    /// regardless of whether the agents subdirectory has been created.
+    pub platform_detected: bool,
     pub can_read: bool,
     pub can_write: bool,
 }

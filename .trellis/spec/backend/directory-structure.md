@@ -19,6 +19,14 @@ native formats are intentionally different:
 - Cursor: Markdown plus YAML frontmatter under `.cursor/agents/`.
 - Codex: standalone TOML files under `.codex/agents/`.
 
+Platform *installation detection* is a separate concern from the agents write
+root: a platform counts as detected when its root directory (`~/.claude`,
+`~/.codex`, `~/.cursor`) exists, even if the `agents/` subdirectory does not.
+`PlatformDirectory.platform_detected` carries this signal; it is always
+computed from the default platform root and is unaffected by user directory
+overrides. A missing `agents/` subdirectory remains a normal state and is
+created on install commit.
+
 The domain layer owns one canonical model. Format-specific parsing, discovery,
 precedence, and rendering stay behind adapters. Never spread platform checks
 through Tauri commands or UI-facing DTOs.

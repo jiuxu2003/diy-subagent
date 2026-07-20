@@ -1,0 +1,9 @@
+{
+  "platform": "claude",
+  "absolutePath": "/Users/example/.claude/agents",
+  "source": "default",
+  "availability": "missing",
+  "platformDetected": true,
+  "canRead": false,
+  "canWrite": false
+}
