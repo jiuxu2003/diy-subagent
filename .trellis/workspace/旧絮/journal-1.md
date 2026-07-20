@@ -85,3 +85,39 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 3: GitHub Actions CI 回归与 macOS 自动发行流水线
+
+**Date**: 2026-07-20
+**Task**: GitHub Actions CI 回归与 macOS 自动发行流水线
+**Branch**: `main`
+
+### Summary
+
+确认 mac app 构建可行后落地两条流水线：ci.yml 双 job 跑前端四件套与 Rust 三件套（PR/push main 双路径实测绿），release.yml 由 v* tag 触发做三处版本一致性校验、复用 CI 检查并经 tauri-action 产出未签名 aarch64 dmg 挂 draft release（v0.1.0 实测通过，错误 tag 被拦截）。dmg 真机挂载启动验证，签名接口以注释块预留，CI 契约与三个实测坑位沉淀至 spec/backend/ci-release-pipeline.md。
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `81428c3` | (see git log) |
+| `38f53f4` | (see git log) |
+| `49b21fe` | (see git log) |
+| `f1b217c` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
