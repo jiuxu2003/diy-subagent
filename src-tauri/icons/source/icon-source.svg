@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <!-- Dark backplate: near-app-background navy with a soft top-light -->
+    <radialGradient id="bg" cx="50%" cy="18%" r="110%">
+      <stop offset="0%" stop-color="#232c44"/>
+      <stop offset="45%" stop-color="#161c2c"/>
+      <stop offset="100%" stop-color="#0e1219"/>
+    </radialGradient>
+    <!-- Brand indigo gradient for nodes and links -->
+    <linearGradient id="ink" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#9298ff"/>
+      <stop offset="100%" stop-color="#5b65f5"/>
+    </linearGradient>
+    <!-- userSpaceOnUse: a bounding-box gradient degenerates on purely vertical strokes -->
+    <linearGradient id="inkSoft" gradientUnits="userSpaceOnUse" x1="512" y1="420" x2="512" y2="660">
+      <stop offset="0%" stop-color="#7880ff"/>
+      <stop offset="100%" stop-color="#5b65f5"/>
+    </linearGradient>
+    <!-- Glow behind the parent node so the hierarchy reads at small sizes -->
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#7880ff" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#7880ff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Squircle backplate with a hairline inner edge -->
+  <rect x="64" y="64" width="896" height="896" rx="200" fill="url(#bg)"/>
+  <rect x="70" y="70" width="884" height="884" rx="194" fill="none" stroke="#ffffff" stroke-opacity="0.06" stroke-width="4"/>
+
+  <!-- Links: parent fans out to three children -->
+  <g stroke="url(#inkSoft)" stroke-width="26" stroke-linecap="round" fill="none">
+    <path d="M 512 452 L 512 660"/>
+    <path d="M 468 420 L 296 636"/>
+    <path d="M 556 420 L 728 636"/>
+  </g>
+
+  <!-- Parent node -->
+  <circle cx="512" cy="352" r="230" fill="url(#glow)"/>
+  <circle cx="512" cy="352" r="118" fill="url(#ink)"/>
+  <circle cx="512" cy="352" r="118" fill="none" stroke="#ffffff" stroke-opacity="0.25" stroke-width="6"/>
+
+  <!-- Child nodes: hollow rings -->
+  <g fill="#131828" stroke="url(#ink)" stroke-width="30">
+    <circle cx="276" cy="712" r="86"/>
+    <circle cx="512" cy="736" r="86"/>
+    <circle cx="748" cy="712" r="86"/>
+  </g>
+</svg>
