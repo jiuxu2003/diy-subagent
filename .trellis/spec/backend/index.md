@@ -22,6 +22,7 @@ TypeScript frontend.
 | [Error Handling](./error-handling.md) | Typed Rust errors and stable IPC error contracts | Initial baseline |
 | [Quality Guidelines](./quality-guidelines.md) | Rust quality gates and contract tests | Initial baseline |
 | [Logging Guidelines](./logging-guidelines.md) | Structured, privacy-safe application logs | Initial baseline |
+| [CI & Release Pipeline](./ci-release-pipeline.md) | GitHub Actions regression checks and tag-driven draft releases | Initial baseline |
 
 ---
 
