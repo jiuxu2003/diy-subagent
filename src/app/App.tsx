@@ -1,4 +1,4 @@
-import { Bot, Boxes, Moon, Settings, Sun, WandSparkles } from "lucide-react";
+import { Boxes, Moon, Settings, Sun, WandSparkles } from "lucide-react";
 import { useState } from "react";
 
 import type { AgentDraft } from "../contracts";
@@ -30,29 +30,27 @@ export function App() {
   };
 
   return (
-    <div className="m-3 grid min-h-[calc(100vh-1.5rem)] grid-cols-[240px_minmax(0,1fr)] overflow-hidden rounded-[28px] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-window)]">
-      <aside className="flex flex-col border-r border-[var(--border)] bg-[var(--sidebar)] p-4 backdrop-blur-2xl">
-        <div className="flex items-center gap-3 px-2 py-3">
-          <span className="grid size-10 place-items-center rounded-2xl bg-[var(--accent)] text-white shadow-md">
-            <Bot className="size-5" aria-hidden="true" />
-          </span>
-          <div>
-            <p className="font-bold tracking-tight">DIY Subagent</p>
-            <p className="text-xs text-[var(--text-subtle)]">
-              macOS local studio
-            </p>
-          </div>
-        </div>
+    <div className="grid h-screen grid-cols-[220px_minmax(0,1fr)] bg-[var(--background)]">
+      {/* Overlay title bar drag strip; must contain no interactive children. */}
+      <div className="fixed inset-x-0 top-0 z-50 h-7" data-tauri-drag-region />
 
-        <nav className="mt-7 space-y-1" aria-label="主导航">
+      <aside className="flex min-h-0 flex-col border-r border-[var(--border)] bg-[var(--sidebar)]">
+        {/* Spacer keeps sidebar content clear of the macOS traffic lights. */}
+        <div className="h-11 shrink-0" data-tauri-drag-region />
+
+        <p className="px-4 text-sm font-semibold tracking-tight">
+          DIY Subagent
+        </p>
+
+        <nav aria-label="主导航" className="mt-4 space-y-0.5 px-2">
           {navigation.map((item) => {
             const Icon = item.icon;
             return (
               <button
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold outline-none transition focus-visible:ring-2 focus-visible:ring-[var(--focus)]",
+                  "flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--focus)]",
                   active === item.id
-                    ? "bg-[var(--surface-raised)] text-[var(--text)] shadow-sm"
+                    ? "bg-[var(--accent-soft)] text-[var(--accent)]"
                     : "text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]",
                 )}
                 key={item.id}
@@ -68,25 +66,21 @@ export function App() {
           })}
         </nav>
 
-        <div className="mt-auto space-y-3">
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-3 text-xs leading-5 text-[var(--text-muted)]">
-            <p className="font-semibold text-[var(--text)]">原生文件优先</p>
-            <p className="mt-1">库存、冲突和 revision 均直接来自磁盘。</p>
-          </div>
+        <div className="mt-auto p-2">
           <Button
-            className="w-full justify-start"
+            aria-label={theme === "dark" ? "切换浅色" : "切换深色"}
             onClick={toggleTheme}
+            size="icon"
             variant="ghost"
           >
             {theme === "dark"
               ? <Sun className="size-4" aria-hidden="true" />
               : <Moon className="size-4" aria-hidden="true" />}
-            {theme === "dark" ? "切换浅色" : "切换深色"}
           </Button>
         </div>
       </aside>
 
-      <main className="min-w-0 overflow-auto bg-[var(--background)] p-8">
+      <main className="min-w-0 overflow-auto bg-[var(--background)] p-7">
         {active === "templates"
           ? (
             <TemplatesPage
