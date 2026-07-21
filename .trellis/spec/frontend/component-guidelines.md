@@ -89,6 +89,80 @@ export function AgentFilePreview({
 - Support light and dark appearance from the first component.
 - Avoid layout that depends on English string length.
 
+### Convention: macOS-native visual system (established 2026-07 beauty-ui)
+
+**What**: The app follows a macOS-native tool aesthetic (TablePlus/Things-like).
+All values below are contracts, not suggestions:
+
+- **Color**: every color goes through a `var(--*)` token defined in
+  `src/styles/globals.css` (`:root` + `.dark`). Accent is macOS system blue
+  (`--accent`: `#007aff` light / `#0a84ff` dark). Surfaces are neutral gray —
+  never blue-tinted grays, never gradients.
+- **Type scale**: redefined in the Tailwind `@theme` block — `text-xs` 11px,
+  `text-sm`/`text-base` 13px (body baseline), `text-lg` 15px, `text-xl` 17px,
+  `text-2xl` 20px (page titles), `text-3xl` 24px (max). `text-4xl+` is
+  forbidden. Page header = `text-2xl font-semibold tracking-tight` plus at most
+  one muted 13px explainer line.
+- **Radii**: `rounded-md` (6px) for controls, `rounded-lg` (8px) for grouped
+  list containers, `rounded-xl` (12px) for dialogs. `rounded-2xl`/`rounded-3xl`
+  are forbidden.
+- **Shadows**: none except dialog elevation (`shadow-2xl` on Radix content) and
+  the near-none `--shadow-card`. Structure comes from hairline borders
+  (`--border`), not depth.
+- **Lists over cards**: repeated records render as hairline-divided rows
+  (`divide-y divide-[var(--border)]` inside one `rounded-lg border` container),
+  not as a grid of nested cards. The `Card` and `Badge` primitives were
+  deleted on purpose — do not reintroduce them.
+- **Status semantics**: use `components/ui/StatusDot` (6px tone dot + required
+  11px text, color never the only signal) or plain muted text — never pill
+  badges.
+- **Monospace for data**: paths, logical names, operation ids, and diffs always
+  use `font-mono`. Code/diff panels use neutral `#161618` background with
+  `text-neutral-200` in both themes.
+
+**Why**: the previous UI read as AI-generated (nested cards, pill overload,
+marketing eyebrows, purple-blue accent) and was explicitly rejected by the
+product owner.
+
+```tsx
+// Good: hairline row list with StatusDot
+<ul className="divide-y divide-[var(--border)] rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+  <li className="flex items-center gap-4 px-4 py-3.5">
+    <h2 className="text-sm font-semibold">{name}</h2>
+    <StatusDot tone="success">只读</StatusDot>
+  </li>
+</ul>
+
+// Bad: nested card + pill badge + oversized title (deleted pattern)
+<Card className="rounded-2xl p-6 shadow-lg">
+  <h1 className="text-4xl font-bold">从一个真正有边界的专家开始</h1>
+  <Badge tone="success">默认只读</Badge>
+</Card>
+```
+
+### Convention: user-facing copy tone
+
+**What**: UI strings are plain Simplified-Chinese product language. Forbidden
+in user-visible copy: internal spec jargon (`WritePlan`, `token`, `可补偿批次`,
+`revision`, `磁盘事实来源`), marketing eyebrows/slogans, and trust-signal cards
+("离线且确定性", "不调用 LLM"). Describe what happens for the user instead
+(e.g. 「写入前自动备份，失败自动回滚。」).
+
+**Why**: leaking implementation vocabulary into the UI is the fastest way back
+to demo-feel; guarantees belong in behavior, not banners.
+
+### Convention: frameless window drag regions
+
+**What**: the window uses `titleBarStyle: "Overlay"` + `hiddenTitle`
+(tauri.conf.json). Draggability comes from two `data-tauri-drag-region`
+elements in `App.tsx`: a fixed full-width `h-7` top strip and the sidebar's
+`h-11` traffic-light spacer. Drag regions must never contain interactive
+children, and page content must start below the top strip.
+
+**Why**: removing either region makes the frameless window undraggable;
+interactive elements inside a drag region become unclickable. The attributes
+are inert in plain-web Playwright runs.
+
 ---
 
 ## Accessibility
@@ -114,3 +188,9 @@ export function AgentFilePreview({
 - Making the entire agent editor platform-specific instead of isolating only
   the differing fields.
 - Using snapshots as the only assertion for security- or data-loss-sensitive UI.
+- Reintroducing deleted patterns: pill badges, nested `Card` grids,
+  `rounded-2xl+`, gradients, or marketing copy (see Styling conventions).
+- Placing interactive elements inside a `data-tauri-drag-region` element, or
+  breaking one of the protected test-anchor strings (nav labels, 「保存个人模板」,
+  「在 Finder 中显示恢复目录」, platform labels) without updating the tests in
+  the same change.

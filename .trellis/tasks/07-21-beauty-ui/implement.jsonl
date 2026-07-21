@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Component, styling, and accessibility conventions for rebuilding ui primitives and all six screens"}
+{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "Feature-first placement rules when adding StatusDot and deleting Card/Badge primitives"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "CopyableLine copied-state must stay local ephemeral UI state; TanStack Query ownership untouched by restyle"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "lint/typecheck/vitest/e2e gates and UI string conventions for the copy rewrite"}

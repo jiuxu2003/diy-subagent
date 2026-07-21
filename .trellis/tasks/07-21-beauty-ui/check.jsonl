@@ -1,0 +1,3 @@
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Verify pnpm lint/typecheck/test/test:e2e all green after the redesign"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Verify accessibility (roles, labels, focus rings) survived the de-card restructure and Badge removal"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Confirm zero IPC contract surface (DTO/zod/fixtures) was touched by this UI-only task"}
