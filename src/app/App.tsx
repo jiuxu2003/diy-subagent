@@ -34,15 +34,25 @@ export function App() {
       {/* Overlay title bar drag strip; must contain no interactive children. */}
       <div className="fixed inset-x-0 top-0 z-50 h-7" data-tauri-drag-region />
 
-      <aside className="flex min-h-0 flex-col border-r border-[var(--border)] bg-[var(--sidebar)]">
+      {/* Tauri only checks the mousedown target for data-tauri-drag-region
+          (never its ancestors), so the aside AND every non-interactive
+          container inside it carry the attribute; buttons stay clickable
+          because a click on them targets the button itself. */}
+      <aside
+        className="flex min-h-0 flex-col border-r border-[var(--border)] bg-[var(--sidebar)]"
+        data-tauri-drag-region
+      >
         {/* Spacer keeps sidebar content clear of the macOS traffic lights. */}
         <div className="h-11 shrink-0" data-tauri-drag-region />
 
-        <p className="px-4 text-sm font-semibold tracking-tight">
+        <p
+          className="px-4 text-sm font-semibold tracking-tight"
+          data-tauri-drag-region
+        >
           DIY Subagent
         </p>
 
-        <nav aria-label="主导航" className="mt-4 space-y-0.5 px-2">
+        <nav aria-label="主导航" className="mt-4 space-y-0.5 px-2" data-tauri-drag-region>
           {navigation.map((item) => {
             const Icon = item.icon;
             return (
@@ -66,7 +76,7 @@ export function App() {
           })}
         </nav>
 
-        <div className="mt-auto p-2">
+        <div className="mt-auto p-2" data-tauri-drag-region>
           <Button
             aria-label={theme === "dark" ? "切换浅色" : "切换深色"}
             onClick={toggleTheme}
