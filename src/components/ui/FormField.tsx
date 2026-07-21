@@ -27,7 +27,7 @@ export function FieldShell({
     <div className="space-y-2">
       <div className="flex items-baseline justify-between gap-4">
         <label
-          className="text-sm font-semibold text-[var(--text)]"
+          className="text-xs font-medium text-[var(--text-muted)]"
           htmlFor={htmlFor}
         >
           {label}
@@ -52,7 +52,7 @@ export function FieldShell({
 }
 
 const fieldClassName =
-  "w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2.5 text-sm text-[var(--text)] outline-none transition placeholder:text-[var(--text-subtle)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--focus-soft)] disabled:opacity-50";
+  "w-full rounded-md border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-sm text-[var(--text)] outline-none transition placeholder:text-[var(--text-subtle)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--focus-soft)] disabled:opacity-50";
 
 export function Input(
   { className, ...props }: InputHTMLAttributes<HTMLInputElement>,
@@ -66,7 +66,7 @@ export function Textarea({
 }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <textarea
-      className={cn(fieldClassName, "min-h-28 resize-y leading-6", className)}
+      className={cn(fieldClassName, "min-h-28 resize-y", className)}
       {...props}
     />
   );
