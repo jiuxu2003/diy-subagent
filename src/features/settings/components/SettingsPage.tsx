@@ -1,10 +1,8 @@
-import { FolderCog, RotateCcw, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 
 import type { AgentPlatform } from "../../../contracts";
-import { Badge } from "../../../components/ui/Badge";
 import { Button } from "../../../components/ui/Button";
-import { Card } from "../../../components/ui/Card";
+import { StatusDot } from "../../../components/ui/StatusDot";
 import { errorMessage } from "../../../lib/formatting/error";
 import { platformLabel } from "../../../lib/formatting/platform";
 import {
@@ -40,24 +38,26 @@ export function SettingsPage() {
   };
 
   return (
-    <section aria-labelledby="settings-heading" className="space-y-7">
+    <section
+      aria-labelledby="settings-heading"
+      className="mx-auto max-w-3xl space-y-5"
+    >
       <header>
-        <p className="text-sm font-semibold text-[var(--accent)]">
-          路径与安全边界
-        </p>
-        <h1 id="settings-heading" className="mt-2 text-3xl font-bold">
+        <h1
+          id="settings-heading"
+          className="text-2xl font-semibold tracking-tight"
+        >
           设置
         </h1>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--text-muted)]">
-          每个平台独立解析“用户覆盖 → 官方确认的环境变量 →
-          默认目录”。当前版本没有足够官方证据的环境变量分支会被主动跳过。
+        <p className="mt-1 text-sm text-[var(--text-muted)]">
+          subagent 安装到以下目录，可为每个平台自定义。
         </p>
       </header>
 
       {error
         ? (
           <div
-            className="rounded-2xl border border-[var(--danger-border)] bg-[var(--danger-soft)] p-4 text-sm text-[var(--danger)]"
+            className="rounded-md border border-[var(--danger-border)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]"
             role="alert"
           >
             {error}
@@ -65,90 +65,85 @@ export function SettingsPage() {
         )
         : null}
 
-      {directories.isPending ? <p>正在解析平台目录…</p> : null}
+      {directories.isPending
+        ? <p className="text-sm text-[var(--text-muted)]">正在解析平台目录…</p>
+        : null}
       {directories.error
         ? (
-          <p className="text-[var(--danger)]">
+          <p className="text-sm text-[var(--danger)]">
             {errorMessage(directories.error)}
           </p>
         )
         : null}
-      <div className="grid gap-5">
-        {directories.data?.map((directory) => (
-          <Card
-            className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-6 p-5"
-            key={directory.platform}
-          >
-            <div className="flex min-w-0 items-start gap-4">
-              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)]">
-                <FolderCog
-                  className="size-5 text-[var(--accent-strong)]"
-                  aria-hidden="true"
-                />
-              </span>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h2 className="font-bold">
-                    {platformLabel(directory.platform)}
-                  </h2>
-                  <Badge
-                    tone={directory.availability === "ready"
-                      ? "success"
-                      : directory.availability === "missing"
-                      ? "warning"
-                      : "danger"}
-                  >
-                    {availabilityLabel(
-                      directory.availability,
-                      directory.platformDetected,
-                    )}
-                  </Badge>
-                  <Badge>
-                    {directory.source === "userOverride"
-                      ? "用户覆盖"
-                      : "默认路径"}
-                  </Badge>
-                </div>
-                <p className="mt-2 break-all font-mono text-xs text-[var(--text-muted)]">
-                  {directory.absolutePath}
-                </p>
-                <p className="mt-2 text-xs text-[var(--text-subtle)]">
-                  可读：{directory.canRead ? "是" : "否"}{" "}
-                  · 可写：{directory.canWrite ? "是" : "未确认"}
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                disabled={choose.isPending}
-                onClick={() => void chooseDirectory(directory.platform)}
-                variant="secondary"
-              >
-                选择目录
-              </Button>
-              <Button
-                disabled={directory.source === "default" || reset.isPending}
-                onClick={() => void resetDirectory(directory.platform)}
-                variant="ghost"
-              >
-                <RotateCcw className="size-4" aria-hidden="true" />
-                恢复默认
-              </Button>
-            </div>
-          </Card>
-        ))}
-      </div>
 
-      <Card className="flex gap-4 border-amber-300/30 bg-[var(--warning-soft)] p-5 text-[var(--warning)]">
-        <ShieldAlert className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
-        <div className="text-sm leading-6">
-          <p className="font-semibold">目录缺失不会触发扫描写入</p>
-          <p>
-            只有当你在安装向导中选择该平台并确认整个 WritePlan 后，Rust
-            后端才会创建缺失目录。
-          </p>
-        </div>
-      </Card>
+      {directories.data
+        ? (
+          <div className="divide-y divide-[var(--border)] rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+            {directories.data.map((directory) => (
+              <div
+                className="flex items-start justify-between gap-6 px-4 py-3.5"
+                key={directory.platform}
+              >
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                    <h2 className="text-sm font-semibold">
+                      {platformLabel(directory.platform)}
+                    </h2>
+                    <StatusDot
+                      tone={directory.availability === "ready"
+                        ? "success"
+                        : directory.availability === "missing"
+                        ? "warning"
+                        : "danger"}
+                    >
+                      {availabilityLabel(
+                        directory.availability,
+                        directory.platformDetected,
+                      )}
+                    </StatusDot>
+                    {directory.source === "userOverride"
+                      ? (
+                        <span className="text-xs text-[var(--text-muted)]">
+                          自定义
+                        </span>
+                      )
+                      : null}
+                  </div>
+                  <p className="mt-1 break-all font-mono text-xs text-[var(--text-muted)]">
+                    {directory.absolutePath}
+                  </p>
+                  <p className="mt-1 text-xs text-[var(--text-subtle)]">
+                    可读：{directory.canRead ? "是" : "否"}{" "}
+                    · 可写：{directory.canWrite ? "是" : "未确认"}
+                  </p>
+                </div>
+                <div className="flex shrink-0 gap-2">
+                  <Button
+                    disabled={choose.isPending}
+                    onClick={() => void chooseDirectory(directory.platform)}
+                    size="sm"
+                    variant="secondary"
+                  >
+                    选择目录
+                  </Button>
+                  <Button
+                    disabled={directory.source === "default" || reset.isPending}
+                    onClick={() => void resetDirectory(directory.platform)}
+                    size="sm"
+                    variant="ghost"
+                  >
+                    恢复默认
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+        : null}
+
+      <p className="text-xs text-[var(--text-muted)]">
+        缺失的目录会在安装时自动创建。
+      </p>
     </section>
   );
 }

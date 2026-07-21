@@ -1,4 +1,4 @@
-import { ChevronLeft, FileCheck2, Layers3, Save } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useState } from "react";
 
 import type {
@@ -8,9 +8,7 @@ import type {
   PlatformOverride,
   TargetSelection,
 } from "../../../contracts";
-import { Badge } from "../../../components/ui/Badge";
 import { Button } from "../../../components/ui/Button";
-import { Card } from "../../../components/ui/Card";
 import {
   FieldShell,
   Input,
@@ -85,39 +83,25 @@ export function StructuredEditor({
   return (
     <section
       aria-labelledby="agent-editor-heading"
-      className="mx-auto max-w-5xl space-y-6"
+      className="mx-auto max-w-5xl space-y-7"
     >
-      <header className="flex items-start justify-between gap-6">
-        <div>
-          <Button onClick={onBack} size="sm" variant="ghost">
-            <ChevronLeft className="size-4" aria-hidden="true" />
-            返回模板库
-          </Button>
-          <h1
-            id="agent-editor-heading"
-            className="mt-4 text-3xl font-bold tracking-tight"
-          >
-            定制共享工作契约
-          </h1>
-          <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
-            编辑产品语义，而不是
-            YAML/TOML。平台适配器会生成原生格式并标记无法精确映射的能力。
-          </p>
-        </div>
-        <div className="rounded-2xl bg-[var(--accent-soft)] px-4 py-3 text-right">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--accent-strong)]">
-            当前 Agent
-          </p>
-          <p className="mt-1 font-mono text-sm font-semibold">
-            {draft.logicalName}
-          </p>
-        </div>
+      <header>
+        <Button onClick={onBack} size="sm" variant="ghost">
+          <ChevronLeft className="size-4" aria-hidden="true" />
+          返回模板库
+        </Button>
+        <h1
+          id="agent-editor-heading"
+          className="mt-3 text-2xl font-semibold tracking-tight"
+        >
+          编辑 <span className="font-mono">{draft.logicalName}</span>
+        </h1>
       </header>
 
       {error
         ? (
           <div
-            className="rounded-2xl border border-[var(--danger-border)] bg-[var(--danger-soft)] px-5 py-4 text-sm font-medium text-[var(--danger)]"
+            className="rounded-md border border-[var(--danger-border)] bg-[var(--danger-soft)] px-4 py-3 text-sm font-medium text-[var(--danger)]"
             role="alert"
           >
             {error}
@@ -126,11 +110,10 @@ export function StructuredEditor({
         : null}
 
       <EditorSection
-        icon={<FileCheck2 className="size-5" aria-hidden="true" />}
         title="身份与委派描述"
-        description="名称决定文件和调用标识；描述决定 Agent 何时自动委派。"
+        description="名称决定文件名与调用标识；描述决定何时自动委派。"
       >
-        <div className="grid grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] gap-5">
+        <div className="grid grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] gap-4">
           <FieldShell
             htmlFor="logical-name"
             label="逻辑名称"
@@ -167,12 +150,8 @@ export function StructuredEditor({
         </div>
       </EditorSection>
 
-      <EditorSection
-        icon={<Layers3 className="size-5" aria-hidden="true" />}
-        title="共享语义章节"
-        description="每章都可独立验证，避免退化为一段无边界的大 Prompt。"
-      >
-        <div className="space-y-5">
+      <EditorSection title="共享语义章节">
+        <div className="space-y-4">
           <TextField
             id="role-goal"
             label="角色目标"
@@ -181,7 +160,7 @@ export function StructuredEditor({
               updateShared("roleGoal", value);
             }}
           />
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-2 gap-4">
             <ListField
               id="when-to-use"
               label="适用场景"
@@ -223,7 +202,7 @@ export function StructuredEditor({
               updateShared("outputContract", value);
             }}
           />
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-2 gap-4">
             <ListField
               id="constraints"
               label="约束"
@@ -252,11 +231,8 @@ export function StructuredEditor({
         </div>
       </EditorSection>
 
-      <EditorSection
-        title="语言与使用契约"
-        description="安装后直接告诉你怎么调用、怎么验证。"
-      >
-        <div className="grid grid-cols-2 gap-5">
+      <EditorSection title="语言与使用契约">
+        <div className="grid grid-cols-2 gap-4">
           <FieldShell htmlFor="response-language" label="响应语言">
             <Select
               id="response-language"
@@ -301,11 +277,8 @@ export function StructuredEditor({
         </div>
       </EditorSection>
 
-      <EditorSection
-        title="目标平台与高级字段"
-        description="每个平台独立生成、校验和预览。"
-      >
-        <div className="space-y-4">
+      <EditorSection title="目标平台与高级字段">
+        <div className="divide-y divide-[var(--border)] rounded-lg border border-[var(--border)] bg-[var(--surface)]">
           {platforms.map((platform) => (
             <PlatformTarget
               draft={draft}
@@ -320,9 +293,8 @@ export function StructuredEditor({
       </EditorSection>
 
       <EditorSection
-        icon={<Save className="size-5" aria-hidden="true" />}
         title="保存为个人模板"
-        description="模板正文保存在本机 Application Support，后续可继续离线使用。"
+        description="模板保存在本机，可重复使用。"
       >
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4">
           <FieldShell htmlFor="personal-template-name" label="模板名称">
@@ -354,21 +326,16 @@ export function StructuredEditor({
           : null}
       </EditorSection>
 
-      <footer className="sticky bottom-4 flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4 shadow-xl backdrop-blur-xl">
-        <div>
-          <p className="text-sm font-semibold">
-            已选择 {targets.length} 个目标
-          </p>
-          <p className="text-xs text-[var(--text-muted)]">
-            预览不会写入磁盘；只有确认后的单次 token 才能提交。
-          </p>
-        </div>
+      <footer className="sticky bottom-0 flex items-center justify-between gap-4 border-t border-[var(--border)] bg-[var(--background)] py-3">
+        <p className="text-sm text-[var(--text-muted)]">
+          已选 {targets.length} 个平台
+        </p>
         <Button
           disabled={isPreviewing || targets.length === 0}
           onClick={onPreview}
           size="lg"
         >
-          {isPreviewing ? "正在生成原生预览…" : "生成三平台原生预览"}
+          {isPreviewing ? "正在生成预览…" : "生成预览"}
         </Button>
       </footer>
     </section>
@@ -378,31 +345,26 @@ export function StructuredEditor({
 function EditorSection({
   title,
   description,
-  icon,
   children,
 }: {
   title: string;
-  description: string;
-  icon?: React.ReactNode;
+  description?: string;
   children: React.ReactNode;
 }) {
   return (
-    <Card className="p-6">
-      <div className="mb-6 flex items-start gap-3">
-        {icon
+    <section className="space-y-4">
+      <div className="border-b border-[var(--border)] pb-2">
+        <h2 className="text-sm font-semibold">{title}</h2>
+        {description
           ? (
-            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent-strong)]">
-              {icon}
-            </span>
+            <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+              {description}
+            </p>
           )
           : null}
-        <div>
-          <h2 className="text-lg font-bold">{title}</h2>
-          <p className="mt-1 text-sm text-[var(--text-muted)]">{description}</p>
-        </div>
       </div>
       {children}
-    </Card>
+    </section>
   );
 }
 
@@ -494,24 +456,34 @@ function PlatformTarget({
   };
 
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+    <div className="px-4 py-3">
       <div className="flex items-center justify-between gap-4">
-        <label className="flex items-center gap-3 font-semibold">
-          <input
-            checked={Boolean(selected)}
-            className="size-4 accent-[var(--accent)]"
-            disabled={disabled}
-            onChange={toggle}
-            type="checkbox"
-          />
-          {platformLabel(platform)}
-          {disabled ? <Badge>导入首版仅写回原平台</Badge> : null}
-        </label>
+        <div className="flex items-center gap-2.5">
+          {/* The imported-only note stays outside the label so it never
+              pollutes the checkbox accessible name. */}
+          <label className="flex items-center gap-2.5 text-sm font-medium">
+            <input
+              checked={Boolean(selected)}
+              className="size-4 accent-[var(--accent)]"
+              disabled={disabled}
+              onChange={toggle}
+              type="checkbox"
+            />
+            {platformLabel(platform)}
+          </label>
+          {disabled
+            ? (
+              <span className="text-xs text-[var(--text-muted)]">
+                仅可写回来源平台
+              </span>
+            )
+            : null}
+        </div>
         {selected
           ? (
             <Select
               aria-label={`${platformLabel(platform)} 冲突策略`}
-              className="w-48 py-2"
+              className="w-44"
               onChange={(event) => {
                 onTargetsChange(
                   targets.map((target) =>
@@ -567,7 +539,7 @@ function PlatformAdvancedFields({
 
   if (value.platform === "claude") {
     return (
-      <div className="mt-4 grid grid-cols-3 gap-4 border-t border-[var(--border)] pt-4">
+      <div className="mt-3 grid grid-cols-3 gap-4 border-t border-[var(--border)] pt-3">
         <FieldShell htmlFor="claude-model" label="model">
           <Input
             id="claude-model"
@@ -625,7 +597,7 @@ function PlatformAdvancedFields({
   }
   if (value.platform === "codex") {
     return (
-      <div className="mt-4 grid grid-cols-3 gap-4 border-t border-[var(--border)] pt-4">
+      <div className="mt-3 grid grid-cols-3 gap-4 border-t border-[var(--border)] pt-3">
         <FieldShell htmlFor="codex-model" label="model">
           <Input
             id="codex-model"
@@ -686,7 +658,7 @@ function PlatformAdvancedFields({
     );
   }
   return (
-    <div className="mt-4 grid grid-cols-3 gap-4 border-t border-[var(--border)] pt-4">
+    <div className="mt-3 grid grid-cols-3 gap-4 border-t border-[var(--border)] pt-3">
       <FieldShell htmlFor="cursor-model" label="model">
         <Input
           id="cursor-model"
@@ -703,7 +675,7 @@ function PlatformAdvancedFields({
           value={value.config.model ?? ""}
         />
       </FieldShell>
-      <label className="flex items-center gap-3 self-end rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-semibold">
+      <label className="flex items-center gap-2.5 self-end rounded-md border border-[var(--border)] px-3 py-1.5 text-sm font-medium">
         <input
           checked={value.config.readonly ?? false}
           className="size-4 accent-[var(--accent)]"
@@ -720,7 +692,7 @@ function PlatformAdvancedFields({
         />
         readonly
       </label>
-      <label className="flex items-center gap-3 self-end rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-semibold">
+      <label className="flex items-center gap-2.5 self-end rounded-md border border-[var(--border)] px-3 py-1.5 text-sm font-medium">
         <input
           checked={value.config.isBackground ?? false}
           className="size-4 accent-[var(--accent)]"

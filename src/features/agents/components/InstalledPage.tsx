@@ -1,12 +1,5 @@
 import * as Dialog from "@radix-ui/react-dialog";
-import {
-  ChevronDown,
-  FileCode2,
-  FolderOpen,
-  Import,
-  RefreshCw,
-  X,
-} from "lucide-react";
+import { FileCode2, FolderOpen, Import, RefreshCw, X } from "lucide-react";
 import { useState } from "react";
 
 import type {
@@ -14,9 +7,8 @@ import type {
   DiscoveredAgent,
   InventoryGroup,
 } from "../../../contracts";
-import { Badge } from "../../../components/ui/Badge";
 import { Button } from "../../../components/ui/Button";
-import { Card } from "../../../components/ui/Card";
+import { StatusDot } from "../../../components/ui/StatusDot";
 import { errorMessage } from "../../../lib/formatting/error";
 import { platformLabel } from "../../../lib/formatting/platform";
 import {
@@ -61,29 +53,36 @@ export function InstalledPage(
   };
 
   return (
-    <section aria-labelledby="installed-heading" className="space-y-7">
-      <header className="flex items-end justify-between gap-6">
+    <section
+      aria-labelledby="installed-heading"
+      className="mx-auto max-w-4xl space-y-5"
+    >
+      <header className="flex items-start justify-between gap-6">
         <div>
-          <p className="text-sm font-semibold text-[var(--accent)]">
-            磁盘事实来源
-          </p>
-          <h1 id="installed-heading" className="mt-2 text-3xl font-bold">
-            已安装 Agent
+          <h1
+            id="installed-heading"
+            className="text-2xl font-semibold tracking-tight"
+          >
+            已安装
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">
-            这里直接扫描三个已解析的用户级目录。数据库不保存启停状态，也不会把扫描动作当成“接管”。
+          <p className="mt-1 text-sm text-[var(--text-muted)]">
+            读取各平台用户级目录中的 subagent 文件。
           </p>
         </div>
-        <Button onClick={() => void inventory.refetch()} variant="secondary">
+        <Button
+          onClick={() => void inventory.refetch()}
+          size="sm"
+          variant="ghost"
+        >
           <RefreshCw className="size-4" aria-hidden="true" />
-          手动刷新
+          刷新
         </Button>
       </header>
 
       {actionError
         ? (
           <div
-            className="rounded-2xl border border-[var(--danger-border)] bg-[var(--danger-soft)] p-4 text-sm text-[var(--danger)]"
+            className="rounded-md border border-[var(--danger-border)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]"
             role="alert"
           >
             {actionError}
@@ -112,7 +111,7 @@ export function InstalledPage(
         ? (
           <div className="space-y-4">
             {inventory.data.groups.map((group) => (
-              <InventoryCard
+              <InventoryGroupSection
                 group={group}
                 importPending={importAgent.isPending}
                 key={group.logicalName}
@@ -135,27 +134,27 @@ function PlatformStatusBanners(
     return null;
   }
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
+    <div className="divide-y divide-[var(--border)] rounded-lg border border-[var(--border)] bg-[var(--surface)]">
       {pending.map((status) => (
-        <Card
-          className="flex items-center gap-3 px-4 py-3"
+        <div
+          className="flex items-center gap-3 px-4 py-2.5"
           key={status.platform}
         >
-          <Badge tone={status.platformDetected ? "success" : "warning"}>
+          <StatusDot tone={status.platformDetected ? "success" : "warning"}>
             {status.platformDetected ? "已安装" : "未检测到"}
-          </Badge>
+          </StatusDot>
           <p className="text-sm text-[var(--text-muted)]">
             {status.platformDetected
               ? `已安装 ${platformLabel(status.platform)}，暂无 subagent`
               : `未检测到 ${platformLabel(status.platform)}`}
           </p>
-        </Card>
+        </div>
       ))}
     </div>
   );
 }
 
-function InventoryCard({
+function InventoryGroupSection({
   group,
   importPending,
   onImport,
@@ -167,39 +166,30 @@ function InventoryCard({
   onReveal: (sourceId: string) => void;
 }) {
   return (
-    <Card className="overflow-hidden">
-      <div className="flex items-center justify-between gap-4 border-b border-[var(--border)] px-5 py-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h2 className="font-mono text-base font-bold">
-              {group.logicalName}
-            </h2>
-            {group.hasConflict ? <Badge tone="danger">同平台冲突</Badge> : null}
-          </div>
-          <p className="mt-1 text-xs text-[var(--text-muted)]">
-            {group.sources.length} 个原生来源
-          </p>
-        </div>
-        <div className="flex gap-2">
-          {group.sources.map((source) => (
-            <Badge key={source.sourceId}>
-              {platformLabel(source.platform)}
-            </Badge>
-          ))}
-        </div>
+    <section className="overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+      <div className="flex items-center gap-3 border-b border-[var(--border)] px-4 py-3">
+        <h2 className="font-mono text-sm font-semibold">
+          {group.logicalName}
+        </h2>
+        <span className="text-xs text-[var(--text-muted)]">
+          {group.sources.length} 个平台
+        </span>
+        {group.hasConflict
+          ? <StatusDot tone="danger">名称冲突</StatusDot>
+          : null}
       </div>
       <div className="divide-y divide-[var(--border)]">
         {group.sources.map((source) => (
           <div
-            className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 py-4"
+            className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3"
             key={source.sourceId}
           >
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold">
+              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                <span className="text-sm font-semibold">
                   {platformLabel(source.platform)}
                 </span>
-                <Badge
+                <StatusDot
                   tone={source.parseStatus === "valid"
                     ? "success"
                     : source.parseStatus === "readOnlyUnsupported"
@@ -207,13 +197,13 @@ function InventoryCard({
                     : "danger"}
                 >
                   {source.parseStatus === "valid"
-                    ? "可安全导入"
+                    ? "可导入"
                     : source.parseStatus === "readOnlyUnsupported"
-                    ? "只读保留"
+                    ? "只读"
                     : "解析失败"}
-                </Badge>
+                </StatusDot>
                 {source.ownership === "imported"
-                  ? <Badge tone="accent">已显式导入</Badge>
+                  ? <StatusDot tone="accent">已导入</StatusDot>
                   : null}
               </div>
               <p className="mt-1 truncate font-mono text-xs text-[var(--text-muted)]">
@@ -221,13 +211,13 @@ function InventoryCard({
               </p>
               {source.description
                 ? (
-                  <p className="mt-2 line-clamp-2 text-sm text-[var(--text-muted)]">
+                  <p className="mt-1 line-clamp-2 text-sm text-[var(--text-muted)]">
                     {source.description}
                   </p>
                 )
                 : null}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <NativeContentDialog source={source} />
               <Button
                 onClick={() => {
@@ -254,7 +244,7 @@ function InventoryCard({
           </div>
         ))}
       </div>
-    </Card>
+    </section>
   );
 }
 
@@ -266,18 +256,18 @@ function NativeContentDialog({ source }: { source: DiscoveredAgent }) {
       <Dialog.Trigger asChild>
         <Button size="sm" variant="ghost">
           <FileCode2 className="size-4" aria-hidden="true" />
-          原生文件
+          查看文件
         </Button>
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/35 backdrop-blur-sm" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 flex max-h-[82vh] w-[min(900px,82vw)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] shadow-2xl outline-none">
-          <div className="flex items-start justify-between border-b border-[var(--border)] px-6 py-5">
-            <div>
-              <Dialog.Title className="text-lg font-bold">
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/30" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 flex max-h-[82vh] w-[min(860px,82vw)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-2xl outline-none">
+          <div className="flex items-start justify-between gap-4 border-b border-[var(--border)] px-5 py-4">
+            <div className="min-w-0">
+              <Dialog.Title className="truncate font-mono text-lg font-semibold">
                 {source.logicalName}
               </Dialog.Title>
-              <Dialog.Description className="mt-1 font-mono text-xs text-[var(--text-muted)]">
+              <Dialog.Description className="mt-0.5 break-all font-mono text-xs text-[var(--text-muted)]">
                 {source.pathLabel}
               </Dialog.Description>
             </div>
@@ -287,9 +277,9 @@ function NativeContentDialog({ source }: { source: DiscoveredAgent }) {
               </Button>
             </Dialog.Close>
           </div>
-          <div className="min-h-0 flex-1 overflow-auto bg-[#111722] p-5">
+          <div className="min-h-0 flex-1 overflow-auto bg-[#161618] p-4">
             {content.isPending
-              ? <p className="text-sm text-slate-400">正在读取磁盘内容…</p>
+              ? <p className="text-sm text-neutral-400">正在读取磁盘内容…</p>
               : content.error
               ? (
                 <p className="text-sm text-red-300">
@@ -297,7 +287,7 @@ function NativeContentDialog({ source }: { source: DiscoveredAgent }) {
                 </p>
               )
               : (
-                <pre className="whitespace-pre-wrap break-words text-xs leading-6 text-slate-200">
+                <pre className="whitespace-pre-wrap break-words text-xs leading-6 text-neutral-200">
                 {content.data.content}
                 </pre>
               )}
@@ -310,16 +300,8 @@ function NativeContentDialog({ source }: { source: DiscoveredAgent }) {
 
 function InventoryState({ title }: { title: string }) {
   return (
-    <Card className="grid min-h-64 place-items-center p-8 text-center">
-      <div>
-        <ChevronDown
-          className="mx-auto size-7 text-[var(--text-subtle)]"
-          aria-hidden="true"
-        />
-        <p className="mt-3 text-sm font-semibold text-[var(--text-muted)]">
-          {title}
-        </p>
-      </div>
-    </Card>
+    <div className="grid min-h-48 place-items-center text-center">
+      <p className="text-sm text-[var(--text-muted)]">{title}</p>
+    </div>
   );
 }
