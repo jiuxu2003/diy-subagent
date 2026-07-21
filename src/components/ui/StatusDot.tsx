@@ -32,7 +32,7 @@ const toneClasses = {
 } as const;
 
 /**
- * Compact status indicator: a 6px tone-colored dot next to an 11px label.
+ * Compact status indicator: a 6px tone-colored dot next to a 12px label.
  * The label text is required so color is never the only status signal.
  */
 export function StatusDot({

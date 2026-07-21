@@ -113,3 +113,15 @@
 - **Overlay 标题栏风险**：拖拽区缺失 → 窗口拖不动；红绿灯与侧栏内容重叠 → 顶部 44px 预留。`pnpm tauri:dev` 手动验证拖拽/双击缩放/全屏。回滚 = 还原 tauri.conf 两行。
 - 每个实现步骤独立提交，可按步回滚（见 implement.md）。
 - 图标重生成会覆盖 Square*/StoreLogo（同源图形，预期内）。
+
+## D8 后续修订（用户实测 + Open Design 两轮评审，2026-07-21）
+
+用户真机反馈与 OD 逐轮对齐产生的增量决议，均已实现：
+
+- **拖拽区扩展**：D4 的两处拖拽区不够——整条侧栏（aside + 各非交互容器）都挂 `data-tauri-drag-region`（Tauri 只查 mousedown target 不上溯，故子容器需各自挂）。
+- **下拉框**：原生 select 弹层丑，换 `@radix-ui/react-select`（2.3.4）自绘：trigger 同输入框规格，popper 浮层 rounded-lg + shadow-2xl + 选中打勾；「继承」经 `"inherit"` 哨兵转换，draft 数据形状零变化。
+- **字阶升档**（R1 结论 13px 偏小 → R2 选 14px 折中档）：xs 12/17 · sm/base 14/21 · lg 16/23 · xl 18/25 · 2xl 21/28 · 3xl 25/32；Button 尺寸升半档（sm h-7.5 / md h-8.5 / lg h-9.5 / icon size-7.5）。
+- **等宽字体**：IBM Plex Mono（@fontsource 5.3.0，main.tsx 导入 400/500，离线打包），`--font-mono` 首位；UI sans 栈不动。
+- **品牌层**：`--brand` `#6c74f6`/`#7a82ff`，仅三个身份位——侧栏 BrandMark、已安装页空态线稿插画（+副行文案）、成功页对勾方块；克制条款：永不用于按钮/选中/焦点/状态，无渐变无铺色。
+- **代码块随主题**：`--code-bg`/`--code-text`（浅 #f6f6f8/#403f53、深 #161618/#e5e5e5）；差异面板 `+`/`-` 行染语义 soft 底（DiffLines 纯函数行渲染，不做语法高亮）。
+- **R1 其余锁定项**：蓝色密度不变、侧栏选中态保持 accent-soft 蓝底蓝字。

@@ -98,11 +98,19 @@ All values below are contracts, not suggestions:
   `src/styles/globals.css` (`:root` + `.dark`). Accent is macOS system blue
   (`--accent`: `#007aff` light / `#0a84ff` dark). Surfaces are neutral gray —
   never blue-tinted grays, never gradients.
-- **Type scale**: redefined in the Tailwind `@theme` block — `text-xs` 11px,
-  `text-sm`/`text-base` 13px (body baseline), `text-lg` 15px, `text-xl` 17px,
-  `text-2xl` 20px (page titles), `text-3xl` 24px (max). `text-4xl+` is
+- **Type scale**: redefined in the Tailwind `@theme` block — `text-xs` 12px,
+  `text-sm`/`text-base` 14px (body baseline), `text-lg` 16px, `text-xl` 18px,
+  `text-2xl` 21px (page titles), `text-3xl` 25px (max). `text-4xl+` is
   forbidden. Page header = `text-2xl font-semibold tracking-tight` plus at most
-  one muted 13px explainer line.
+  one muted explainer line. (13px baseline was rejected as too small in user
+  review, 2026-07.)
+- **Fonts**: UI text uses the system stack (SF Pro + PingFang — never replace
+  it). Data (paths, logical names, ids, diffs) uses `font-mono` = IBM Plex
+  Mono, bundled offline via `@fontsource/ibm-plex-mono` imports in `main.tsx`.
+- **Brand color**: `--brand` (`#6c74f6` light / `#7a82ff` dark) is identity
+  only — sidebar `BrandMark`, empty-state line art, install-success check
+  square. Never on buttons, selection, focus, or status; functional accent
+  stays system blue.
 - **Radii**: `rounded-md` (6px) for controls, `rounded-lg` (8px) for grouped
   list containers, `rounded-xl` (12px) for dialogs. `rounded-2xl`/`rounded-3xl`
   are forbidden.
@@ -117,8 +125,10 @@ All values below are contracts, not suggestions:
   11px text, color never the only signal) or plain muted text — never pill
   badges.
 - **Monospace for data**: paths, logical names, operation ids, and diffs always
-  use `font-mono`. Code/diff panels use neutral `#161618` background with
-  `text-neutral-200` in both themes.
+  use `font-mono`. Code/diff panels follow the theme via `--code-bg` /
+  `--code-text` (`#f6f6f8`/`#403f53` light, `#161618`/`#e5e5e5` dark); the
+  unified-diff panel tints `+`/`-` lines with success/danger soft tokens. Full
+  syntax highlighting is deliberately out of scope (offline, no tokenizer).
 
 **Why**: the previous UI read as AI-generated (nested cards, pill overload,
 marketing eyebrows, purple-blue accent) and was explicitly rejected by the
