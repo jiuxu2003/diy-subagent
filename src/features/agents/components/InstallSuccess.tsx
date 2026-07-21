@@ -1,4 +1,5 @@
-import { CheckCircle2, Copy, FolderCheck, RotateCcw } from "lucide-react";
+import { Check, CheckCircle2, Copy, FolderCheck, RotateCcw } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 import type { AgentDraft, BatchCommitResult } from "../../../contracts";
 import { Badge } from "../../../components/ui/Badge";
@@ -99,24 +100,75 @@ export function InstallSuccess(
   );
 }
 
+const COPY_FEEDBACK_RESET_MS = 2000;
+
+type CopyFeedback = "idle" | "copied" | "failed";
+
 function CopyableLine({ label, value }: { label: string; value: string }) {
-  const copy = () => {
-    void navigator.clipboard.writeText(value);
+  const [feedback, setFeedback] = useState<CopyFeedback>("idle");
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearResetTimer = () => {
+    if (resetTimerRef.current !== null) {
+      clearTimeout(resetTimerRef.current);
+      resetTimerRef.current = null;
+    }
   };
+
+  // Clear any pending reset timer on unmount so it never fires afterwards.
+  useEffect(() => clearResetTimer, []);
+
+  const copy = async () => {
+    // A re-click cancels the previous reset so fresh feedback stays visible.
+    clearResetTimer();
+    let next: CopyFeedback;
+    try {
+      await navigator.clipboard.writeText(value);
+      next = "copied";
+    } catch {
+      next = "failed";
+    }
+    setFeedback(next);
+    // Drop a timer scheduled by an overlapping earlier copy before rearming.
+    clearResetTimer();
+    resetTimerRef.current = setTimeout(() => {
+      resetTimerRef.current = null;
+      setFeedback("idle");
+    }, COPY_FEEDBACK_RESET_MS);
+  };
+
   return (
     <button
       className="flex w-full items-center justify-between gap-3 rounded-xl border border-[var(--border)] p-3 text-left hover:bg-[var(--surface-hover)]"
-      onClick={copy}
+      onClick={() => {
+        void copy();
+      }}
       type="button"
     >
       <span>
         <span className="block text-xs text-[var(--text-subtle)]">{label}</span>
         <span className="mt-1 block font-mono text-xs">{value}</span>
       </span>
-      <Copy
-        className="size-4 shrink-0 text-[var(--text-muted)]"
-        aria-hidden="true"
-      />
+      <span className="flex shrink-0 items-center gap-1.5" role="status">
+        {feedback === "idle"
+          ? (
+            <Copy
+              className="size-4 text-[var(--text-muted)]"
+              aria-hidden="true"
+            />
+          )
+          : feedback === "copied"
+          ? (
+            <>
+              <Check
+                className="size-4 text-[var(--success)]"
+                aria-hidden="true"
+              />
+              <span className="text-xs text-[var(--success)]">已复制</span>
+            </>
+          )
+          : <span className="text-xs text-[var(--danger)]">复制失败</span>}
+      </span>
     </button>
   );
 }
