@@ -6,24 +6,25 @@
   --font-sans:
     -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue",
     "PingFang SC", sans-serif;
+  /* Bundled IBM Plex Mono first (see src/main.tsx imports); system monos fall back. */
   --font-mono:
-    "SF Mono", "SFMono-Regular", ui-monospace, Menlo, Monaco, Consolas,
-    monospace;
+    "IBM Plex Mono", "SF Mono", "SFMono-Regular", ui-monospace, Menlo, Monaco,
+    Consolas, monospace;
 
-  /* Compact desktop type scale: 13px body baseline. */
-  --text-xs: 11px;
-  --text-xs--line-height: 16px;
-  --text-sm: 13px;
-  --text-sm--line-height: 20px;
-  --text-base: 13px;
-  --text-base--line-height: 20px;
-  --text-lg: 15px;
-  --text-lg--line-height: 22px;
-  --text-xl: 17px;
-  --text-xl--line-height: 24px;
-  --text-2xl: 20px;
+  /* Compact desktop type scale: 14px body baseline. */
+  --text-xs: 12px;
+  --text-xs--line-height: 17px;
+  --text-sm: 14px;
+  --text-sm--line-height: 21px;
+  --text-base: 14px;
+  --text-base--line-height: 21px;
+  --text-lg: 16px;
+  --text-lg--line-height: 23px;
+  --text-xl: 18px;
+  --text-xl--line-height: 25px;
+  --text-2xl: 21px;
   --text-2xl--line-height: 28px;
-  --text-3xl: 24px;
+  --text-3xl: 25px;
   --text-3xl--line-height: 32px;
 }
 
@@ -42,6 +43,10 @@
   --accent: #007aff;
   --accent-strong: #0066d6;
   --accent-soft: rgba(0, 122, 255, 0.12);
+  /* Identity-only tint: BrandMark, empty-state art, success check. Never functional. */
+  --brand: #6c74f6;
+  --code-bg: #f6f6f8;
+  --code-text: #403f53;
   --focus: #007aff;
   --focus-soft: rgba(0, 122, 255, 0.25);
   --success: #1e8236;
@@ -71,6 +76,9 @@
   --accent: #0a84ff;
   --accent-strong: #3395ff;
   --accent-soft: rgba(10, 132, 255, 0.16);
+  --brand: #7a82ff;
+  --code-bg: #161618;
+  --code-text: #e5e5e5;
   --focus: #0a84ff;
   --focus-soft: rgba(10, 132, 255, 0.3);
   --success: #30d158;

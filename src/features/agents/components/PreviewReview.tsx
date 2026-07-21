@@ -9,6 +9,7 @@ import type {
 } from "../../../contracts";
 import { Button } from "../../../components/ui/Button";
 import { StatusDot } from "../../../components/ui/StatusDot";
+import { cn } from "../../../lib/formatting/cn";
 import { platformLabel } from "../../../lib/formatting/platform";
 
 interface PreviewReviewProps {
@@ -218,7 +219,7 @@ export function PreviewReview({
 
               <div className="space-y-4">
                 <CodePanel title="生成文件">{target.nativeContent}</CodePanel>
-                <CodePanel title="差异">
+                <CodePanel title="差异" variant="diff">
                   {target.unifiedDiff || "无内容差异"}
                 </CodePanel>
               </div>
@@ -252,15 +253,50 @@ function Definition({ label, value }: { label: string; value: string }) {
   );
 }
 
-function CodePanel({ title, children }: { title: string; children: string }) {
+function CodePanel(
+  { title, variant = "plain", children }: {
+    title: string;
+    variant?: "plain" | "diff";
+    children: string;
+  },
+) {
   return (
     <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)]">
       <div className="border-b border-[var(--border)] px-4 py-2 text-sm font-medium">
         {title}
       </div>
-      <pre className="max-h-96 overflow-auto whitespace-pre-wrap break-words bg-[#161618] p-4 text-xs leading-6 text-neutral-200">
-        {children}
+      <pre className="max-h-96 overflow-auto whitespace-pre-wrap break-words bg-[var(--code-bg)] p-4 text-xs leading-6 text-[var(--code-text)]">
+        {variant === "diff" ? <DiffLines content={children} /> : children}
       </pre>
     </div>
+  );
+}
+
+/**
+ * Minimal unified-diff line tinting: added/removed/hunk lines only. Full
+ * syntax highlighting is deliberately out of scope — the app stays offline
+ * and ships no tokenizer.
+ */
+function DiffLines({ content }: { content: string }) {
+  return (
+    <>
+      {content.split("\n").map((line, index) => {
+        const tint = line.startsWith("+") && !line.startsWith("+++")
+          ? "bg-[var(--success-soft)] text-[var(--success)]"
+          : line.startsWith("-") && !line.startsWith("---")
+          ? "bg-[var(--danger-soft)] text-[var(--danger)]"
+          : line.startsWith("@@")
+          ? "text-[var(--text-muted)]"
+          : null;
+        return (
+          // Diff lines have no stable identity; positional keys are correct
+          // here because the content string is replaced wholesale.
+          <span className={cn("block", tint)} key={index}>
+            {/* Keep empty lines one line-height tall inside the block span. */}
+            {line === "" ? " " : line}
+          </span>
+        );
+      })}
+    </>
   );
 }

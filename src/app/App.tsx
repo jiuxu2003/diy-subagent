@@ -2,6 +2,7 @@ import { Boxes, Moon, Settings, Sun, WandSparkles } from "lucide-react";
 import { useState } from "react";
 
 import type { AgentDraft } from "../contracts";
+import { BrandMark } from "../components/ui/BrandMark";
 import { Button } from "../components/ui/Button";
 import { InstalledPage } from "../features/agents/components/InstalledPage";
 import { useInventoryEvents } from "../features/agents/hooks/useInventoryEvents";
@@ -46,9 +47,12 @@ export function App() {
         <div className="h-11 shrink-0" data-tauri-drag-region />
 
         <p
-          className="px-4 text-sm font-semibold tracking-tight"
+          className="flex items-center gap-2 px-4 text-sm font-semibold tracking-tight"
           data-tauri-drag-region
         >
+          {/* pointer-events-none keeps the svg from eating mousedown inside
+              the drag region (Tauri only checks the event target). */}
+          <BrandMark className="size-5 pointer-events-none" />
           DIY Subagent
         </p>
 

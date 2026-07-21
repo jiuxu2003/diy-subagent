@@ -1,4 +1,4 @@
-import { Check, CheckCircle2, Copy, RotateCcw } from "lucide-react";
+import { Check, Copy, RotateCcw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import type { AgentDraft, BatchCommitResult } from "../../../contracts";
@@ -22,10 +22,13 @@ export function InstallSuccess(
     >
       <header>
         <div className="flex items-center gap-2.5">
-          <CheckCircle2
-            className="size-5 shrink-0 text-[var(--success)]"
+          {/* Brand-tinted check: identity accent, not a functional status. */}
+          <span
             aria-hidden="true"
-          />
+            className="flex size-7 shrink-0 items-center justify-center rounded-md bg-[var(--brand)]"
+          >
+            <Check className="size-4 text-white" />
+          </span>
           <h1
             id="install-success-heading"
             className="text-2xl font-semibold tracking-tight"

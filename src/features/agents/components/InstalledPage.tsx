@@ -8,6 +8,7 @@ import type {
   InventoryGroup,
 } from "../../../contracts";
 import { Button } from "../../../components/ui/Button";
+import { BrandGlyph } from "../../../components/ui/BrandMark";
 import { StatusDot } from "../../../components/ui/StatusDot";
 import { errorMessage } from "../../../lib/formatting/error";
 import { platformLabel } from "../../../lib/formatting/platform";
@@ -98,7 +99,12 @@ export function InstalledPage(
         : null}
       {inventory.data && inventory.data.groups.length === 0 &&
           inventory.data.directories.length === 0
-        ? <InventoryState title="三个用户级目录中还没有发现原生 Agent 文件。" />
+        ? (
+          <InventoryState
+            title="三个用户级目录中还没有发现原生 Agent 文件。"
+            variant="empty"
+          />
+        )
         : null}
       {inventory.data
         ? (
@@ -277,17 +283,21 @@ function NativeContentDialog({ source }: { source: DiscoveredAgent }) {
               </Button>
             </Dialog.Close>
           </div>
-          <div className="min-h-0 flex-1 overflow-auto bg-[#161618] p-4">
+          <div className="min-h-0 flex-1 overflow-auto bg-[var(--code-bg)] p-4">
             {content.isPending
-              ? <p className="text-sm text-neutral-400">正在读取磁盘内容…</p>
+              ? (
+                <p className="text-sm text-[var(--text-muted)]">
+                  正在读取磁盘内容…
+                </p>
+              )
               : content.error
               ? (
-                <p className="text-sm text-red-300">
+                <p className="text-sm text-[var(--danger)]">
                   {errorMessage(content.error)}
                 </p>
               )
               : (
-                <pre className="whitespace-pre-wrap break-words text-xs leading-6 text-neutral-200">
+                <pre className="whitespace-pre-wrap break-words text-xs leading-6 text-[var(--code-text)]">
                 {content.data.content}
                 </pre>
               )}
@@ -298,10 +308,37 @@ function NativeContentDialog({ source }: { source: DiscoveredAgent }) {
   );
 }
 
-function InventoryState({ title }: { title: string }) {
+function InventoryState(
+  { title, variant = "plain" }: {
+    title: string;
+    variant?: "plain" | "empty";
+  },
+) {
   return (
     <div className="grid min-h-48 place-items-center text-center">
-      <p className="text-sm text-[var(--text-muted)]">{title}</p>
+      <div>
+        {variant === "empty"
+          ? (
+            // Brand line-art illustration, reserved for the empty state only.
+            <svg
+              aria-hidden="true"
+              className="mx-auto mb-4 size-11"
+              focusable="false"
+              viewBox="0 0 24 24"
+            >
+              <BrandGlyph stroke="var(--brand)" />
+            </svg>
+          )
+          : null}
+        <p className="text-sm text-[var(--text-muted)]">{title}</p>
+        {variant === "empty"
+          ? (
+            <p className="mt-1 text-xs text-[var(--text-subtle)]">
+              从模板开始，定制后一键安装到本机
+            </p>
+          )
+          : null}
+      </div>
     </div>
   );
 }
