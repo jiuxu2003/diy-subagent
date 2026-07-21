@@ -33,6 +33,46 @@ interface StructuredEditorProps {
 
 const platforms: AgentPlatform[] = ["claude", "codex", "cursor"];
 
+/**
+ * Radix Select items reject empty-string values, so the "继承" choice
+ * round-trips through this sentinel while the stored draft keeps null.
+ */
+const INHERIT_SENTINEL = "inherit";
+const inheritOption = { value: INHERIT_SENTINEL, label: "继承" };
+
+const responseLanguageOptions = [
+  { value: "followUser", label: "跟随用户输入" },
+  { value: "simplifiedChinese", label: "简体中文" },
+  { value: "english", label: "English" },
+];
+
+const conflictActionOptions = [
+  { value: "fail", label: "冲突时阻止" },
+  { value: "replaceAfterBackup", label: "备份后替换" },
+];
+
+const claudePermissionModeOptions = [
+  inheritOption,
+  { value: "plan", label: "plan" },
+  { value: "default", label: "default" },
+  { value: "acceptEdits", label: "acceptEdits" },
+  { value: "dontAsk", label: "dontAsk" },
+];
+
+const codexReasoningEffortOptions = [
+  inheritOption,
+  { value: "low", label: "low" },
+  { value: "medium", label: "medium" },
+  { value: "high", label: "high" },
+];
+
+const codexSandboxModeOptions = [
+  inheritOption,
+  { value: "read-only", label: "read-only" },
+  { value: "workspace-write", label: "workspace-write" },
+  { value: "danger-full-access", label: "danger-full-access" },
+];
+
 function createPlatformOverride(platform: AgentPlatform): PlatformOverride {
   switch (platform) {
     case "claude":
@@ -236,19 +276,15 @@ export function StructuredEditor({
           <FieldShell htmlFor="response-language" label="响应语言">
             <Select
               id="response-language"
-              onChange={(event) => {
+              onValueChange={(next) => {
                 onDraftChange({
                   ...draft,
-                  responseLanguage: event.currentTarget
-                    .value as AgentDraft["responseLanguage"],
+                  responseLanguage: next as AgentDraft["responseLanguage"],
                 });
               }}
+              options={responseLanguageOptions}
               value={draft.responseLanguage}
-            >
-              <option value="followUser">跟随用户输入</option>
-              <option value="simplifiedChinese">简体中文</option>
-              <option value="english">English</option>
-            </Select>
+            />
           </FieldShell>
           <ListField
             id="invocation-examples"
@@ -484,24 +520,18 @@ function PlatformTarget({
             <Select
               aria-label={`${platformLabel(platform)} 冲突策略`}
               className="w-44"
-              onChange={(event) => {
+              onValueChange={(next) => {
                 onTargetsChange(
                   targets.map((target) =>
                     target.platform === platform
-                      ? {
-                        ...target,
-                        conflictAction: event.currentTarget
-                          .value as ConflictAction,
-                      }
+                      ? { ...target, conflictAction: next as ConflictAction }
                       : target
                   ),
                 );
               }}
+              options={conflictActionOptions}
               value={selected.conflictAction}
-            >
-              <option value="fail">冲突时阻止</option>
-              <option value="replaceAfterBackup">备份后替换</option>
-            </Select>
+            />
           )
           : null}
       </div>
@@ -559,23 +589,18 @@ function PlatformAdvancedFields({
         <FieldShell htmlFor="claude-permission" label="permissionMode">
           <Select
             id="claude-permission"
-            onChange={(event) => {
+            onValueChange={(next) => {
               update({
                 ...value,
                 config: {
                   ...value.config,
-                  permissionMode: nullable(event.currentTarget.value),
+                  permissionMode: fromSelectValue(next),
                 },
               });
             }}
-            value={value.config.permissionMode ?? ""}
-          >
-            <option value="">继承</option>
-            <option value="plan">plan</option>
-            <option value="default">default</option>
-            <option value="acceptEdits">acceptEdits</option>
-            <option value="dontAsk">dontAsk</option>
-          </Select>
+            options={claudePermissionModeOptions}
+            value={toSelectValue(value.config.permissionMode)}
+          />
         </FieldShell>
         <FieldShell htmlFor="claude-tools" label="tools" hint="逗号分隔">
           <Input
@@ -617,42 +642,34 @@ function PlatformAdvancedFields({
         <FieldShell htmlFor="codex-effort" label="model_reasoning_effort">
           <Select
             id="codex-effort"
-            onChange={(event) => {
+            onValueChange={(next) => {
               update({
                 ...value,
                 config: {
                   ...value.config,
-                  modelReasoningEffort: nullable(event.currentTarget.value),
+                  modelReasoningEffort: fromSelectValue(next),
                 },
               });
             }}
-            value={value.config.modelReasoningEffort ?? ""}
-          >
-            <option value="">继承</option>
-            <option value="low">low</option>
-            <option value="medium">medium</option>
-            <option value="high">high</option>
-          </Select>
+            options={codexReasoningEffortOptions}
+            value={toSelectValue(value.config.modelReasoningEffort)}
+          />
         </FieldShell>
         <FieldShell htmlFor="codex-sandbox" label="sandbox_mode">
           <Select
             id="codex-sandbox"
-            onChange={(event) => {
+            onValueChange={(next) => {
               update({
                 ...value,
                 config: {
                   ...value.config,
-                  sandboxMode: nullable(event.currentTarget.value),
+                  sandboxMode: fromSelectValue(next),
                 },
               });
             }}
-            value={value.config.sandboxMode ?? ""}
-          >
-            <option value="">继承</option>
-            <option value="read-only">read-only</option>
-            <option value="workspace-write">workspace-write</option>
-            <option value="danger-full-access">danger-full-access</option>
-          </Select>
+            options={codexSandboxModeOptions}
+            value={toSelectValue(value.config.sandboxMode)}
+          />
         </FieldShell>
       </div>
     );
@@ -730,4 +747,14 @@ function commaItems(value: string): string[] {
 function nullable(value: string): string | null {
   const normalized = value.trim();
   return normalized.length === 0 ? null : normalized;
+}
+
+/** Maps a stored nullable field to the Select value (null → inherit sentinel). */
+function toSelectValue(value: string | null | undefined): string {
+  return value ?? INHERIT_SENTINEL;
+}
+
+/** Maps a Select value back to the stored field (inherit sentinel → null). */
+function fromSelectValue(value: string): string | null {
+  return value === INHERIT_SENTINEL ? null : value;
 }
