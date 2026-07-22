@@ -35,14 +35,13 @@ export function App() {
       {/* Overlay title bar drag strip; must contain no interactive children. */}
       <div className="fixed inset-x-0 top-0 z-50 h-7" data-tauri-drag-region />
 
-      {/* Tauri only checks the mousedown target for data-tauri-drag-region
-          (never its ancestors), so the aside AND every non-interactive
-          container inside it carry the attribute; buttons stay clickable
-          because a click on them targets the button itself. */}
-      <aside
-        className="flex min-h-0 flex-col border-r border-[var(--border)] bg-[var(--sidebar)]"
-        data-tauri-drag-region
-      >
+      {/* Tauri's injected drag handler matches data-tauri-drag-region via
+          the ancestor chain (closest), so ANY interactive element inside a
+          tagged container loses its clicks to window dragging. The attribute
+          therefore lives only on leaf surfaces with no interactive children:
+          the top strip, the traffic-light spacer, the brand row, and the
+          empty filler below the nav. */}
+      <aside className="flex min-h-0 flex-col border-r border-[var(--border)] bg-[var(--sidebar)]">
         {/* Spacer keeps sidebar content clear of the macOS traffic lights. */}
         <div className="h-11 shrink-0" data-tauri-drag-region />
 
@@ -51,12 +50,12 @@ export function App() {
           data-tauri-drag-region
         >
           {/* pointer-events-none keeps the svg from eating mousedown inside
-              the drag region (Tauri only checks the event target). */}
+              the drag region. */}
           <BrandMark className="size-5 pointer-events-none" />
           DIY Subagent
         </p>
 
-        <nav aria-label="主导航" className="mt-4 space-y-0.5 px-2" data-tauri-drag-region>
+        <nav aria-label="主导航" className="mt-4 space-y-0.5 px-2">
           {navigation.map((item) => {
             const Icon = item.icon;
             return (
@@ -80,7 +79,10 @@ export function App() {
           })}
         </nav>
 
-        <div className="mt-auto p-2" data-tauri-drag-region>
+        {/* Empty flexible area doubles as the sidebar's draggable body. */}
+        <div className="min-h-0 flex-1" data-tauri-drag-region />
+
+        <div className="p-2">
           <Button
             aria-label={theme === "dark" ? "切换浅色" : "切换深色"}
             onClick={toggleTheme}

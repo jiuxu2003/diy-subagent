@@ -164,10 +164,14 @@ to demo-feel; guarantees belong in behavior, not banners.
 ### Convention: frameless window drag regions
 
 **What**: the window uses `titleBarStyle: "Overlay"` + `hiddenTitle`
-(tauri.conf.json). Draggability comes from two `data-tauri-drag-region`
-elements in `App.tsx`: a fixed full-width `h-7` top strip and the sidebar's
-`h-11` traffic-light spacer. Drag regions must never contain interactive
-children, and page content must start below the top strip.
+(tauri.conf.json). Draggability comes from four leaf surfaces in `App.tsx`
+carrying `data-tauri-drag-region`: the fixed full-width `h-7` top strip, the
+sidebar's `h-11` traffic-light spacer, the brand row, and the empty flex
+filler below the nav. Tauri's injected handler matches the attribute via the
+ancestor chain (`closest`), so a tagged container makes EVERY descendant —
+including buttons — start a window drag on mousedown and lose its click.
+Never tag a container that holds interactive children; tag only empty/text
+leaf surfaces.
 
 **Why**: removing either region makes the frameless window undraggable;
 interactive elements inside a drag region become unclickable. The attributes

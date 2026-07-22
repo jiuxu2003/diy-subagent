@@ -118,7 +118,7 @@
 
 用户真机反馈与 OD 逐轮对齐产生的增量决议，均已实现：
 
-- **拖拽区扩展**：D4 的两处拖拽区不够——整条侧栏（aside + 各非交互容器）都挂 `data-tauri-drag-region`（Tauri 只查 mousedown target 不上溯，故子容器需各自挂）。
+- **拖拽区扩展**：D4 的两处拖拽区不够。实测证明 Tauri 注入脚本按祖先链（closest）匹配 `data-tauri-drag-region`——挂在含交互元素的容器上会吞掉全部子元素点击，且 `core:default` 权限集不含 `allow-start-dragging`（需在 capabilities 显式授予，否则拖拽无声失败）。终态：属性只挂四个纯叶面（全宽顶条、红绿灯留白、品牌行、导航下方弹性空白），nav/底部容器不挂。
 - **下拉框**：原生 select 弹层丑，换 `@radix-ui/react-select`（2.3.4）自绘：trigger 同输入框规格，popper 浮层 rounded-lg + shadow-2xl + 选中打勾；「继承」经 `"inherit"` 哨兵转换，draft 数据形状零变化。
 - **字阶升档**（R1 结论 13px 偏小 → R2 选 14px 折中档）：xs 12/17 · sm/base 14/21 · lg 16/23 · xl 18/25 · 2xl 21/28 · 3xl 25/32；Button 尺寸升半档（sm h-7.5 / md h-8.5 / lg h-9.5 / icon size-7.5）。
 - **等宽字体**：IBM Plex Mono（@fontsource 5.3.0，main.tsx 导入 400/500，离线打包），`--font-mono` 首位；UI sans 栈不动。
