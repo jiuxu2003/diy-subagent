@@ -173,6 +173,14 @@ children, and page content must start below the top strip.
 interactive elements inside a drag region become unclickable. The attributes
 are inert in plain-web Playwright runs.
 
+> **Warning**: drag regions die silently without the right capability. The
+> attribute triggers `plugin:window|start_dragging`, and Tauri 2's
+> `core:default` / `core:window:default` set does NOT include it — the IPC is
+> denied with no visible error unless devtools is open.
+> `src-tauri/capabilities/default.json` must grant
+> `core:window:allow-start-dragging` (double-click maximize uses
+> `allow-internal-toggle-maximize`, which IS in the default set).
+
 ---
 
 ## Accessibility
