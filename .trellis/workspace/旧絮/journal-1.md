@@ -121,3 +121,50 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 4: UI 视觉重构与细节修复（beauty-ui）
+
+**Date**: 2026-07-22
+**Task**: UI 视觉重构与细节修复（beauty-ui）
+**Branch**: `feat/beauty-ui`
+
+### Summary
+
+按 macOS 原生工具风完成全站 UI 重构：透明留白重制应用图标、复制反馈状态机、系统蓝 token 与 Overlay 原生外壳、UI 原语重设（删 Badge/Card 增 StatusDot）、六屏重构与文案去术语化。经 Open Design 两轮评审落地 14px 字阶、IBM Plex Mono、品牌层三身份位、代码块随主题。修复 Radix 自绘下拉、窗口拖拽权限（core:window:allow-start-dragging）与拖拽区 closest 匹配吞点击问题，默认窗口调整为 1200x780。全程 lint/typecheck/15 单测/e2e 绿。
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ff52599` | (see git log) |
+| `d743214` | (see git log) |
+| `640e2fa` | (see git log) |
+| `525c58c` | (see git log) |
+| `4619bae` | (see git log) |
+| `1f68cf7` | (see git log) |
+| `d656842` | (see git log) |
+| `15b584c` | (see git log) |
+| `83e14a8` | (see git log) |
+| `a72c42e` | (see git log) |
+| `2d8f990` | (see git log) |
+| `1873005` | (see git log) |
+| `d52c1f0` | (see git log) |
+| `4579671` | (see git log) |
+| `a20b7d4` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

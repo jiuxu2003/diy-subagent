@@ -1,7 +1,8 @@
+import * as SelectPrimitive from "@radix-ui/react-select";
+import { Check, ChevronDown } from "lucide-react";
 import type {
   InputHTMLAttributes,
   ReactNode,
-  SelectHTMLAttributes,
   TextareaHTMLAttributes,
 } from "react";
 
@@ -27,7 +28,7 @@ export function FieldShell({
     <div className="space-y-2">
       <div className="flex items-baseline justify-between gap-4">
         <label
-          className="text-sm font-semibold text-[var(--text)]"
+          className="text-xs font-medium text-[var(--text-muted)]"
           htmlFor={htmlFor}
         >
           {label}
@@ -52,7 +53,7 @@ export function FieldShell({
 }
 
 const fieldClassName =
-  "w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2.5 text-sm text-[var(--text)] outline-none transition placeholder:text-[var(--text-subtle)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--focus-soft)] disabled:opacity-50";
+  "w-full rounded-md border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-sm text-[var(--text)] outline-none transition placeholder:text-[var(--text-subtle)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--focus-soft)] disabled:opacity-50";
 
 export function Input(
   { className, ...props }: InputHTMLAttributes<HTMLInputElement>,
@@ -66,14 +67,86 @@ export function Textarea({
 }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <textarea
-      className={cn(fieldClassName, "min-h-28 resize-y leading-6", className)}
+      className={cn(fieldClassName, "min-h-28 resize-y", className)}
       {...props}
     />
   );
 }
 
-export function Select(
-  { className, ...props }: SelectHTMLAttributes<HTMLSelectElement>,
-) {
-  return <select className={cn(fieldClassName, className)} {...props} />;
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
+interface SelectProps {
+  id?: string;
+  value: string;
+  onValueChange: (value: string) => void;
+  options: SelectOption[];
+  "aria-label"?: string;
+  className?: string;
+}
+
+/**
+ * Radix-based replacement for the native `<select>`: the popup is rendered
+ * by us (token-styled, both themes) instead of the macOS system menu.
+ * Note: Radix forbids empty-string item values, so "inherit" style options
+ * must map to a sentinel value at the call site.
+ */
+export function Select({
+  id,
+  value,
+  onValueChange,
+  options,
+  "aria-label": ariaLabel,
+  className,
+}: SelectProps) {
+  return (
+    <SelectPrimitive.Root onValueChange={onValueChange} value={value}>
+      <SelectPrimitive.Trigger
+        aria-label={ariaLabel}
+        className={cn(
+          fieldClassName,
+          "flex items-center justify-between gap-2 text-left",
+          className,
+        )}
+        id={id}
+      >
+        <SelectPrimitive.Value />
+        <SelectPrimitive.Icon asChild>
+          <ChevronDown
+            aria-hidden="true"
+            className="size-3.5 shrink-0 text-[var(--text-muted)]"
+          />
+        </SelectPrimitive.Icon>
+      </SelectPrimitive.Trigger>
+      <SelectPrimitive.Portal>
+        <SelectPrimitive.Content
+          className="z-50 max-h-[var(--radix-select-content-available-height)] overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] shadow-2xl"
+          position="popper"
+          sideOffset={4}
+        >
+          <SelectPrimitive.Viewport className="min-w-[var(--radix-select-trigger-width)] p-1">
+            {options.map((option) => (
+              <SelectPrimitive.Item
+                className="flex cursor-default items-center justify-between gap-3 rounded-md px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-[var(--surface-hover)]"
+                key={option.value}
+                value={option.value}
+              >
+                <SelectPrimitive.ItemText>
+                  {option.label}
+                </SelectPrimitive.ItemText>
+                <SelectPrimitive.ItemIndicator asChild>
+                  <Check
+                    aria-hidden="true"
+                    className="size-3.5 shrink-0 text-[var(--accent)]"
+                  />
+                </SelectPrimitive.ItemIndicator>
+              </SelectPrimitive.Item>
+            ))}
+          </SelectPrimitive.Viewport>
+        </SelectPrimitive.Content>
+      </SelectPrimitive.Portal>
+    </SelectPrimitive.Root>
+  );
 }

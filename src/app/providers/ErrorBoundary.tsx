@@ -18,11 +18,11 @@ export class ErrorBoundary
     if (this.state.error !== null) {
       return (
         <main className="grid min-h-screen place-items-center bg-[var(--background)] p-8">
-          <section className="max-w-lg rounded-3xl border border-[var(--danger-border)] bg-[var(--surface-raised)] p-8 shadow-xl">
+          <section className="max-w-lg rounded-xl border border-[var(--danger-border)] bg-[var(--surface-raised)] p-8 shadow-[var(--shadow-card)]">
             <p className="text-sm font-semibold text-[var(--danger)]">
               界面发生异常
             </p>
-            <h1 className="mt-2 text-2xl font-bold text-[var(--text)]">
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--text)]">
               当前页面无法继续渲染
             </h1>
             <p className="mt-3 text-sm leading-6 text-[var(--text-muted)]">

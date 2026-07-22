@@ -5,24 +5,23 @@ import type { ButtonHTMLAttributes } from "react";
 import { cn } from "../../lib/formatting/cn";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)] disabled:pointer-events-none disabled:opacity-45",
+  "inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)] disabled:pointer-events-none disabled:opacity-45",
   {
     variants: {
       variant: {
         primary:
-          "bg-[var(--accent)] px-4 py-2.5 text-white shadow-sm hover:bg-[var(--accent-strong)]",
+          "bg-[var(--accent)] text-white hover:bg-[var(--accent-strong)]",
         secondary:
-          "border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-2.5 text-[var(--text)] hover:bg-[var(--surface-hover)]",
+          "border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] hover:bg-[var(--surface-hover)]",
         ghost:
-          "px-3 py-2 text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]",
-        danger:
-          "bg-[var(--danger)] px-4 py-2.5 text-white hover:bg-[var(--danger-strong)]",
+          "text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]",
+        danger: "bg-[var(--danger)] text-white hover:bg-[var(--danger-strong)]",
       },
       size: {
-        sm: "h-8 rounded-lg px-3 text-xs",
-        md: "h-10",
-        lg: "h-12 px-5 text-base",
-        icon: "size-9 p-0",
+        sm: "h-7.5 px-2.5 text-xs",
+        md: "h-8.5 px-3.5",
+        lg: "h-9.5 px-4",
+        icon: "size-7.5 p-0",
       },
     },
     defaultVariants: {
