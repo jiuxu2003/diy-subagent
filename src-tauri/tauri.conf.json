@@ -14,8 +14,8 @@
       {
         "label": "main",
         "title": "DIY Subagent",
-        "width": 1440,
-        "height": 900,
+        "width": 1200,
+        "height": 780,
         "minWidth": 1120,
         "minHeight": 720,
         "resizable": true,
