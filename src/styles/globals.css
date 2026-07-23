@@ -126,7 +126,10 @@ html {
 
 body {
   margin: 0;
-  min-width: 1120px;
+  /* Matches the window minWidth in tauri.conf.json. The old 1120px floor
+     dated from the 220px-sidebar era; the top-bar shell needs ~800px and
+     the content column caps at max-w-4xl, so 960px is safe. */
+  min-width: 960px;
   min-height: 100vh;
   background: var(--background);
 }
