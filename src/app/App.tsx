@@ -1,6 +1,6 @@
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import { Moon, Plus, RefreshCw, Settings, Sun } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { AgentDraft, AgentPlatform } from "../contracts";
 import { BrandMark } from "../components/ui/BrandMark";
@@ -9,6 +9,7 @@ import {
   SegmentedControl,
   type SegmentedControlItem,
 } from "../components/ui/SegmentedControl";
+import { Toast } from "../components/ui/Toast";
 import { CreatePage } from "../features/agents/components/CreatePage";
 import { HomePage } from "../features/agents/components/HomePage";
 import { useInventoryEvents } from "../features/agents/hooks/useInventoryEvents";
@@ -30,16 +31,84 @@ const platformItems = [
   { id: "cursor", label: platformLabel("cursor") },
 ] satisfies SegmentedControlItem<AgentPlatform>[];
 
+/**
+ * Floor for the refresh spin: local scans settle within milliseconds, so
+ * without a minimum window the click feedback is imperceptible.
+ */
+const MIN_REFRESH_SPIN_MS = 700;
+/** How long the completion toast stays visible before auto-dismissing. */
+const TOAST_DISMISS_MS = 2000;
+
 export function App() {
   const [appView, setAppView] = useState<AppView>({ view: "home" });
   const [platform, selectPlatform] = usePersistedPlatform();
   const { theme, toggleTheme } = useTheme();
   const queryClient = useQueryClient();
-  // Refresh feedback: any in-flight inventory query (prefix match) spins the
-  // icon and disables the button, so identical results still show activity.
-  const isRefreshingInventory =
+  // Refresh feedback: the icon spins and the button stays disabled while any
+  // inventory query fetches (prefix match) OR while the post-click minimum
+  // spin window is open — near-instant local scans would otherwise flash by
+  // unnoticed. The disabled state doubles as the re-entrant click guard.
+  const isFetchingInventory =
     useIsFetching({ queryKey: queryKeys.inventory.all }) > 0;
+  const [minSpinActive, setMinSpinActive] = useState(false);
+  const isRefreshing = minSpinActive || isFetchingInventory;
+  const minSpinTimer = useRef<number | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<number | null>(null);
   useInventoryEvents();
+
+  // Pending feedback timers must not fire state updates after unmount.
+  useEffect(() => {
+    return () => {
+      if (minSpinTimer.current !== null) {
+        window.clearTimeout(minSpinTimer.current);
+      }
+      if (toastTimer.current !== null) {
+        window.clearTimeout(toastTimer.current);
+      }
+    };
+  }, []);
+
+  const showToast = (message: string) => {
+    setToast(message);
+    if (toastTimer.current !== null) {
+      window.clearTimeout(toastTimer.current);
+    }
+    toastTimer.current = window.setTimeout(() => {
+      setToast(null);
+    }, TOAST_DISMISS_MS);
+  };
+
+  const refreshInventory = () => {
+    setMinSpinActive(true);
+    if (minSpinTimer.current !== null) {
+      window.clearTimeout(minSpinTimer.current);
+    }
+    minSpinTimer.current = window.setTimeout(() => {
+      setMinSpinActive(false);
+    }, MIN_REFRESH_SPIN_MS);
+    // refetchType "all" also refetches inactive inventory queries, so a
+    // refresh is never silently skipped; throwOnError turns a failed refetch
+    // into a rejection so the toast can tell success from failure. The toast
+    // fires as soon as the refetch settles — it may overlap the tail of the
+    // minimum spin window, which avoids coordinating the two timers and
+    // keeps the message truthful the moment it appears.
+    void queryClient
+      .invalidateQueries(
+        { queryKey: queryKeys.inventory.all, refetchType: "all" },
+        { throwOnError: true },
+      )
+      .then(
+        () => {
+          showToast("已刷新");
+        },
+        () => {
+          // The page-level query error state still renders; the toast only
+          // acknowledges the outcome of this click.
+          showToast("刷新失败");
+        },
+      );
+  };
 
   const goHome = () => {
     setAppView({ view: "home" });
@@ -66,12 +135,12 @@ export function App() {
 
         <div className="flex h-14 items-center gap-4 px-8">
           <p
-            className="flex items-center gap-2.5 text-lg font-semibold tracking-tight"
+            className="flex items-center gap-2.5 text-xl font-semibold tracking-tight"
             data-tauri-drag-region
           >
             {/* pointer-events-none keeps the svg from eating mousedown inside
                 the drag region. */}
-            <BrandMark className="pointer-events-none size-6" />
+            <BrandMark className="pointer-events-none size-7" />
             DIY Subagent
           </p>
 
@@ -97,25 +166,15 @@ export function App() {
                 ? (
                   <Button
                     aria-label="刷新"
-                    disabled={isRefreshingInventory}
-                    onClick={() => {
-                      // refetchType "all" also refetches inactive inventory
-                      // queries, so a refresh is never silently skipped.
-                      void queryClient.invalidateQueries({
-                        queryKey: queryKeys.inventory.all,
-                        refetchType: "all",
-                      });
-                    }}
+                    disabled={isRefreshing}
+                    onClick={refreshInventory}
                     size="icon"
                     variant="ghost"
                   >
                     {/* animate-spin is neutralized by the global
                         prefers-reduced-motion rule in globals.css. */}
                     <RefreshCw
-                      className={cn(
-                        "size-4",
-                        isRefreshingInventory && "animate-spin",
-                      )}
+                      className={cn("size-4", isRefreshing && "animate-spin")}
                       aria-hidden="true"
                     />
                   </Button>
@@ -186,6 +245,8 @@ export function App() {
           : null}
         {appView.view === "settings" ? <SettingsPage onBack={goHome} /> : null}
       </main>
+
+      <Toast message={toast} />
     </div>
   );
 }

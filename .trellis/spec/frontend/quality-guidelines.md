@@ -64,6 +64,15 @@ pnpm test
 pnpm build
 ```
 
+> **Gotcha (2026-07-23): fake timers + `@testing-library/user-event` hang under
+> Vitest.** RTL v16's async wrapper drains microtasks with `setTimeout(0)` and
+> only advances fake timers through a global `jest` object
+> (`jestFakeTimersAreEnabled` in `@testing-library/react/dist/pure.js`); Vitest
+> has no `jest` global, so every `userEvent` call awaits forever once
+> `vi.useFakeTimers()` is active. Fix: in the test file's `beforeAll`, add
+> `vi.stubGlobal("jest", { advanceTimersByTime: (ms) => vi.advanceTimersByTime(ms) })`.
+> Harmless under real timers. Precedent: `src/app/App.test.tsx`.
+
 ---
 
 ## Code Review Checklist
