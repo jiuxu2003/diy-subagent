@@ -168,3 +168,42 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 5: CC-Switch 风格 UI 整体重绘（v0.3.0）
+
+**Date**: 2026-07-23
+**Task**: CC-Switch 风格 UI 整体重绘（v0.3.0）
+**Branch**: `feat/ccswitch-ui`
+
+### Summary
+
+按 CC-Switch 设计语言整体重绘六屏并调整 IA：去侧栏改双层顶栏（平台分段切换/紫蓝圆形加号），首页改为按平台的已安装 agent 卡片列表，模板并入单页胶囊新建流程（新增内置空白模板 custom-blank）；新增 Pill/SegmentedControl/Toast 原语，删除 StatusDot/TemplateLibrary/TemplatesPage；四轮走查反馈闭环（品牌区两段式与放大、底栏去 sticky、keepPreviousData 消胶囊切换闪烁、卡片操作精简为编辑、状态胶囊仅异常态、顶栏控件仅首页、刷新最小旋转+Toast、rem 字号随窗宽 16-19px 缩放、默认窗口 1000x700）；IPC 契约零改动，版本升 0.3.0，PR #5 已拉起；规范同步 CC-Switch 视觉基线/拖拽区/localStorage 例外/vitest 假计时器坑。
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `8a65cdd` | (see git log) |
+| `6b4404d` | (see git log) |
+| `ade5ca2` | (see git log) |
+| `7b41082` | (see git log) |
+| `366f085` | (see git log) |
+| `5a0b21b` | (see git log) |
+| `81e2824` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
