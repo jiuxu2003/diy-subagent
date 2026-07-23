@@ -31,6 +31,15 @@ definition includes a source revision/hash; commits must include that revision.
 - Do not use `localStorage` as the source of truth for application settings or
   user-owned files.
 
+> **Exception (2026-07-22)**: device-level, loss-tolerant UI preferences may
+> live in `localStorage` when losing the value is harmless and no backend
+> behavior depends on it. Contract: read through zod `safeParse` against the
+> owning enum/schema and fall back to a hardcoded default on garbage or
+> storage errors; wrap reads/writes in try/catch (locked-down webviews can
+> throw). Current sanctioned key: `diy-subagent.platform` (selected platform
+> tab, default `codex`) via `usePersistedPlatform`. Anything that affects data
+> on disk (directories, favorites) still belongs to Rust settings/SQLite.
+
 ---
 
 ## Draft State

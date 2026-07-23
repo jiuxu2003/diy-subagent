@@ -11,5 +11,4 @@ export const queryKeys = {
     platforms: (platforms?: AgentPlatform[]) =>
       ["inventory", ...(platforms ?? [])] as const,
   },
-  nativeContent: (sourceId: string) => ["native-content", sourceId] as const,
 };

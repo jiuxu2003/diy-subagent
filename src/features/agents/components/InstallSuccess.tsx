@@ -1,50 +1,50 @@
-import { Check, Copy, RotateCcw } from "lucide-react";
+import { Check, Copy } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import type { AgentDraft, BatchCommitResult } from "../../../contracts";
 import { Button } from "../../../components/ui/Button";
-import { StatusDot } from "../../../components/ui/StatusDot";
+import { Pill } from "../../../components/ui/Pill";
 import { platformLabel } from "../../../lib/formatting/platform";
 
 interface InstallSuccessProps {
   draft: AgentDraft;
   result: BatchCommitResult;
-  onCreateAnother: () => void;
+  /** Leaves the finished workflow and returns to the home screen. */
+  onBackHome: () => void;
 }
 
 export function InstallSuccess(
-  { draft, result, onCreateAnother }: InstallSuccessProps,
+  { draft, result, onBackHome }: InstallSuccessProps,
 ) {
   return (
-    <section
-      className="mx-auto max-w-3xl space-y-6"
-      aria-labelledby="install-success-heading"
-    >
+    <section className="space-y-6" aria-labelledby="install-success-heading">
       <header>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
           {/* Brand-tinted check: identity accent, not a functional status. */}
           <span
             aria-hidden="true"
-            className="flex size-7 shrink-0 items-center justify-center rounded-md bg-[var(--brand)]"
+            className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-[var(--brand)]"
           >
-            <Check className="size-4 text-white" />
+            <Check className="size-5 text-white" />
           </span>
-          <h1
+          {/* Section-rank heading: the page-rank h1 lives in the CreatePage
+              header rendered above this screen. */}
+          <h2
             id="install-success-heading"
-            className="text-2xl font-semibold tracking-tight"
+            className="text-xl font-semibold tracking-tight"
           >
             <span className="font-mono">{draft.logicalName}</span> 已安装
-          </h1>
+          </h2>
         </div>
-        <p className="mt-1 font-mono text-xs text-[var(--text-muted)]">
+        <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">
           操作记录 {result.operationId}
         </p>
       </header>
 
-      <div className="divide-y divide-[var(--border)] overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+      <div className="divide-y divide-[var(--border)] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
         {result.targets.map((target) => (
           <div
-            className="flex items-center justify-between gap-4 px-4 py-3"
+            className="flex items-center justify-between gap-4 px-5 py-4"
             key={target.platform}
           >
             <div className="min-w-0">
@@ -55,17 +55,17 @@ export function InstallSuccess(
                 {target.targetPath}
               </p>
             </div>
-            <StatusDot className="shrink-0" tone="success">
+            <Pill className="shrink-0" tone="success">
               {target.backupId ? "已替换（有备份）" : "已写入"}
-            </StatusDot>
+            </Pill>
           </div>
         ))}
       </div>
 
       <section className="space-y-3">
-        <h2 className="border-b border-[var(--border)] pb-2 text-sm font-semibold">
+        <h3 className="border-b border-[var(--border)] pb-2 text-sm font-semibold">
           如何调用
-        </h2>
+        </h3>
         <div className="space-y-2">
           {result.targets.map((target) => (
             <CopyableLine
@@ -78,9 +78,9 @@ export function InstallSuccess(
       </section>
 
       <section className="space-y-3">
-        <h2 className="border-b border-[var(--border)] pb-2 text-sm font-semibold">
+        <h3 className="border-b border-[var(--border)] pb-2 text-sm font-semibold">
           验证任务
-        </h2>
+        </h3>
         <p className="text-sm leading-6 text-[var(--text-muted)]">
           {draft.usage.verificationTask}
         </p>
@@ -90,9 +90,8 @@ export function InstallSuccess(
       </section>
 
       <div className="flex justify-end">
-        <Button onClick={onCreateAnother} variant="secondary">
-          <RotateCcw className="size-4" aria-hidden="true" />
-          返回模板库
+        <Button onClick={onBackHome} variant="secondary">
+          返回首页
         </Button>
       </div>
     </section>
@@ -138,7 +137,7 @@ function CopyableLine({ label, value }: { label: string; value: string }) {
 
   return (
     <button
-      className="flex w-full items-center justify-between gap-3 rounded-md border border-[var(--border)] p-3 text-left hover:bg-[var(--surface-hover)]"
+      className="flex w-full items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3.5 text-left hover:bg-[var(--surface-hover)]"
       onClick={() => {
         void copy();
       }}

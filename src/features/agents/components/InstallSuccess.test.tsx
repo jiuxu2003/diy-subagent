@@ -57,7 +57,7 @@ const claudeInvocation = "Use the test-agent subagent for this task.";
 
 function renderSuccess() {
   render(
-    <InstallSuccess draft={draft} onCreateAnother={vi.fn()} result={result} />,
+    <InstallSuccess draft={draft} onBackHome={vi.fn()} result={result} />,
   );
 }
 

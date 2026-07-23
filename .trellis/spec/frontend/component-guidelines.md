@@ -89,64 +89,80 @@ export function AgentFilePreview({
 - Support light and dark appearance from the first component.
 - Avoid layout that depends on English string length.
 
-### Convention: macOS-native visual system (established 2026-07 beauty-ui)
+### Convention: CC-Switch visual system (established 2026-07-22 ccswitch-style-ui; supersedes the 2026-07 macOS-native system)
 
-**What**: The app follows a macOS-native tool aesthetic (TablePlus/Things-like).
+**What**: The app follows the CC-Switch aesthetic (farion1231/cc-switch): top-bar
+driven shell, spacious single-column flat cards, soft pills. Quantified baseline
+lives in `.trellis/tasks/07-22-ccswitch-style-ui/research/cc-switch-style.md`.
 All values below are contracts, not suggestions:
 
 - **Color**: every color goes through a `var(--*)` token defined in
   `src/styles/globals.css` (`:root` + `.dark`). Accent is macOS system blue
   (`--accent`: `#007aff` light / `#0a84ff` dark). Surfaces are neutral gray —
-  never blue-tinted grays, never gradients.
-- **Type scale**: redefined in the Tailwind `@theme` block — `text-xs` 12px,
-  `text-sm`/`text-base` 14px (body baseline), `text-lg` 16px, `text-xl` 18px,
-  `text-2xl` 21px (page titles), `text-3xl` 25px (max). `text-4xl+` is
-  forbidden. Page header = `text-2xl font-semibold tracking-tight` plus at most
-  one muted explainer line. (13px baseline was rejected as too small in user
-  review, 2026-07.)
+  never blue-tinted grays, never gradients. No orange (CC-Switch's "+" color
+  was deliberately not copied).
+- **Type scale**: defined in rem since 2026-07-23 (px equivalents at the 16px
+  root baseline) — `text-xs` 0.75rem (12px), `text-sm`/`text-base` 0.875rem
+  (14px, body baseline), `text-lg` 1rem (16px), `text-xl` 1.125rem (18px),
+  `text-2xl` 1.3125rem (21px, page titles), `text-3xl` 1.5625rem (25px, max).
+  `text-4xl+` is forbidden. The `html` rule sets
+  `font-size: clamp(16px, 1.111vw, 19px)`: 16px baseline up to ~1440px window
+  width, scaling linearly to 19px at ≥~1710px (fullscreen), so the whole
+  rem-based UI (type, Tailwind spacing, radii) grows proportionally with the
+  window; hairline borders deliberately stay px. Page header = back button
+  (when a sub-page) + `text-2xl font-semibold tracking-tight` over a hairline.
+  (13px baseline was rejected as too small in user review, 2026-07.)
 - **Fonts**: UI text uses the system stack (SF Pro + PingFang — never replace
   it). Data (paths, logical names, ids, diffs) uses `font-mono` = IBM Plex
   Mono, bundled offline via `@fontsource/ibm-plex-mono` imports in `main.tsx`.
 - **Brand color**: `--brand` (`#6c74f6` light / `#7a82ff` dark) is identity
-  only — sidebar `BrandMark`, empty-state line art, install-success check
-  square. Never on buttons, selection, focus, or status; functional accent
-  stays system blue.
-- **Radii**: `rounded-md` (6px) for controls, `rounded-lg` (8px) for grouped
-  list containers, `rounded-xl` (12px) for dialogs. `rounded-2xl`/`rounded-3xl`
-  are forbidden.
-- **Shadows**: none except dialog elevation (`shadow-2xl` on Radix content) and
-  the near-none `--shadow-card`. Structure comes from hairline borders
-  (`--border`), not depth.
-- **Lists over cards**: repeated records render as hairline-divided rows
-  (`divide-y divide-[var(--border)]` inside one `rounded-lg border` container),
-  not as a grid of nested cards. The `Card` and `Badge` primitives were
-  deleted on purpose — do not reintroduce them.
-- **Status semantics**: use `components/ui/StatusDot` (6px tone dot + required
-  11px text, color never the only signal) or plain muted text — never pill
-  badges.
+  plus exactly one functional surface: the round top-bar create button
+  (`Button variant="brand" size="iconRound"`). Everything else stays identity
+  only — `BrandMark`, empty-state line art, install-success check tile. Never
+  on selection, focus, links, or status; functional accent stays system blue.
+- **Radii**: record cards `rounded-2xl` (16px), inputs/buttons/dialog panels
+  `rounded-xl` (12px), icon tiles `rounded-[14px]`, chips and pills
+  `rounded-full`. Small inline controls may keep `rounded-lg`/`rounded-md`.
+- **Shadows**: cards use `--shadow-card` (layered soft shadow) and raise to
+  `--shadow-card-hover` on interactive hover; dialogs keep `shadow-2xl`.
+  Borders (`--border`) and shadows work together — a card has both.
+- **Flat cards, one record per card**: repeated top-level records render as a
+  single-column stack of flat `rounded-2xl` cards (tile + bold name + mono
+  path + `Pill` + right-side actions). Card-inside-card nesting remains
+  forbidden; hairline `divide-y` rows are still fine for secondary lists
+  inside one container (e.g. settings rows, preview facts).
+- **Status semantics**: use `components/ui/Pill` (soft tinted background +
+  darker text, `rounded-full`, color never the only signal — the label text is
+  required). `StatusDot` was deleted 2026-07-22; `Card`/`Badge` primitives
+  stay deleted — do not reintroduce any of them.
+- **Segmented switching**: exclusive view switches (platform tabs) use
+  `components/ui/SegmentedControl` (button group with `aria-pressed`, selected
+  segment floats on a raised surface). Preset choices that fill a form use
+  rounded-full chip buttons with `aria-pressed` (see `CreatePage`).
 - **Monospace for data**: paths, logical names, operation ids, and diffs always
   use `font-mono`. Code/diff panels follow the theme via `--code-bg` /
-  `--code-text` (`#f6f6f8`/`#403f53` light, `#161618`/`#e5e5e5` dark); the
-  unified-diff panel tints `+`/`-` lines with success/danger soft tokens. Full
-  syntax highlighting is deliberately out of scope (offline, no tokenizer).
+  `--code-text`; the unified-diff panel tints `+`/`-` lines with
+  success/danger soft tokens. Full syntax highlighting is deliberately out of
+  scope (offline, no tokenizer).
 
-**Why**: the previous UI read as AI-generated (nested cards, pill overload,
-marketing eyebrows, purple-blue accent) and was explicitly rejected by the
-product owner.
+**Why**: the product owner re-anchored the north star from "macOS native
+hairline tool" to CC-Switch's spacious card language (2026-07-22 decision,
+after reviewing the shipped hairline UI). The original AI-slop rejections
+still stand unchanged: nested cards, marketing eyebrows, trust-signal cards,
+and internal jargon in copy remain forbidden — CC-Switch cards are flat
+single-purpose data rows, which is why they are acceptable.
 
 ```tsx
-// Good: hairline row list with StatusDot
-<ul className="divide-y divide-[var(--border)] rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-  <li className="flex items-center gap-4 px-4 py-3.5">
-    <h2 className="text-sm font-semibold">{name}</h2>
-    <StatusDot tone="success">只读</StatusDot>
-  </li>
-</ul>
+// Good: flat single-layer record card with Pill status
+<article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-card-hover)]">
+  <h2 className="font-mono text-lg font-semibold">{name}</h2>
+  <Pill tone="success">可导入</Pill>
+</article>
 
-// Bad: nested card + pill badge + oversized title (deleted pattern)
-<Card className="rounded-2xl p-6 shadow-lg">
+// Bad: nested cards + oversized marketing title (deleted pattern)
+<Card className="p-6 shadow-lg">
   <h1 className="text-4xl font-bold">从一个真正有边界的专家开始</h1>
-  <Badge tone="success">默认只读</Badge>
+  <Card className="mt-4">…</Card>
 </Card>
 ```
 
@@ -164,14 +180,23 @@ to demo-feel; guarantees belong in behavior, not banners.
 ### Convention: frameless window drag regions
 
 **What**: the window uses `titleBarStyle: "Overlay"` + `hiddenTitle`
-(tauri.conf.json). Draggability comes from four leaf surfaces in `App.tsx`
-carrying `data-tauri-drag-region`: the fixed full-width `h-7` top strip, the
-sidebar's `h-11` traffic-light spacer, the brand row, and the empty flex
-filler below the nav. Tauri's injected handler matches the attribute via the
-ancestor chain (`closest`), so a tagged container makes EVERY descendant —
-including buttons — start a window drag on mousedown and lose its click.
-Never tag a container that holds interactive children; tag only empty/text
-leaf surfaces.
+(tauri.conf.json). The header is two stacked zones (2026-07-23): a `h-9`
+traffic-light clearance row on top, then the main row (brand left, controls
+right) — the brand sits BELOW the macOS window controls, not beside them.
+Draggability comes from four leaf surfaces in `App.tsx` carrying
+`data-tauri-drag-region`: the fixed full-width `h-7` top strip, the `h-9`
+traffic-light spacer row, the brand row (its svg needs
+`pointer-events-none`), and the main row's flexible spacer between brand and
+controls. Tauri's injected handler matches the attribute via the ancestor
+chain (`closest`), so a tagged container makes EVERY descendant — including
+buttons — start a window drag on mousedown and lose its click. Never tag a
+container that holds interactive children; tag only empty/text leaf surfaces.
+
+> **Warning**: the header's interactive cluster (SegmentedControl + icon
+> buttons + "+") keeps `relative z-[60]` as a safety net. Controls currently
+> sit below the fixed `z-50` drag strip, but if the layout ever shifts back
+> up, the raised z-index is what stops the strip from swallowing clicks on
+> the buttons' upper edge (regression a20b7d4).
 
 **Why**: removing either region makes the frameless window undraggable;
 interactive elements inside a drag region become unclickable. The attributes
@@ -210,9 +235,13 @@ are inert in plain-web Playwright runs.
 - Making the entire agent editor platform-specific instead of isolating only
   the differing fields.
 - Using snapshots as the only assertion for security- or data-loss-sensitive UI.
-- Reintroducing deleted patterns: pill badges, nested `Card` grids,
-  `rounded-2xl+`, gradients, or marketing copy (see Styling conventions).
-- Placing interactive elements inside a `data-tauri-drag-region` element, or
-  breaking one of the protected test-anchor strings (nav labels, 「保存个人模板」,
-  「在 Finder 中显示恢复目录」, platform labels) without updating the tests in
-  the same change.
+- Reintroducing deleted patterns: nested card grids, gradients, marketing
+  copy, or the deleted `Card`/`Badge`/`StatusDot` primitives (status uses
+  `Pill`; see Styling conventions).
+- Placing interactive elements inside a `data-tauri-drag-region` element,
+  dropping the top-bar cluster's `z-[60]`, or breaking one of the protected
+  test-anchor strings without updating the tests in the same change: group
+  「平台」, buttons 「新建 Subagent」/「返回」/「刷新」/「设置」, region
+  「已安装的 subagent」, heading 「新建 Subagent」/「设置」, group 「预设模板」,
+  checkbox 「Codex」, textbox 「模板名称」, buttons 「保存个人模板」/
+  「在 Finder 中显示恢复目录」, platform labels.

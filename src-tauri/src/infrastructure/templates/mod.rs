@@ -15,7 +15,8 @@ use crate::{
     },
 };
 
-const BUILTIN_TEMPLATES: [&str; 6] = [
+const BUILTIN_TEMPLATES: [&str; 7] = [
+    include_str!("../../../resources/templates/custom-blank.json"),
     include_str!("../../../resources/templates/requirements-clarifier.json"),
     include_str!("../../../resources/templates/architecture-mapper.json"),
     include_str!("../../../resources/templates/docs-researcher.json"),

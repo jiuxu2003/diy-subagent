@@ -1,6 +1,6 @@
 [package]
 name = "diy-subagent"
-version = "0.2.0"
+version = "0.3.0"
 description = "A macOS-first manager for authoring and safely installing custom coding subagents"
 authors = ["旧絮"]
 edition = "2021"
