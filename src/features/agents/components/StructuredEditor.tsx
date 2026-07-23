@@ -345,7 +345,9 @@ export function StructuredEditor({
           : null}
       </EditorSection>
 
-      <footer className="sticky bottom-0 flex items-center justify-between gap-4 border-t border-[var(--border)] bg-[var(--background)] py-4">
+      {/* Plain in-flow action row at the end of the form: a sticky footer
+          kept covering the last sections while scrolling. */}
+      <footer className="flex items-center justify-between gap-4 border-t border-[var(--border)] pt-5">
         <p className="text-sm text-[var(--text-muted)]">
           已选 {targets.length} 个平台
         </p>

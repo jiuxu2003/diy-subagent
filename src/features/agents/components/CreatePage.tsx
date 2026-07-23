@@ -98,9 +98,13 @@ function TemplateDrivenCreate(
     ];
   }, [templates.data]);
 
+  // With keepPreviousData, `template.data` keeps the previous package while
+  // a newly clicked chip loads, so the editor below never unmounts into a
+  // loading state during a switch.
+  const loadedPackage = template.data;
   const draft = useMemo(
-    () => template.data ? createDraftFromTemplate(template.data) : null,
-    [template.data],
+    () => loadedPackage ? createDraftFromTemplate(loadedPackage) : null,
+    [loadedPackage],
   );
 
   if (templates.isPending || template.isPending) {
@@ -115,6 +119,9 @@ function TemplateDrivenCreate(
     );
   }
   if (template.error) {
+    // A failed chip switch also lands here: on error the placeholder is
+    // dropped, so the page surfaces the error state with a retry action
+    // instead of silently staying on the previous template.
     return (
       <PageState
         action={<Button onClick={() => void template.refetch()}>重试</Button>}
@@ -122,7 +129,9 @@ function TemplateDrivenCreate(
       />
     );
   }
-  if (orderedTemplates === null || draft === null) {
+  if (
+    orderedTemplates === null || loadedPackage === undefined || draft === null
+  ) {
     return (
       <PageState
         action={<Button onClick={() => void templates.refetch()}>重试</Button>}
@@ -134,9 +143,11 @@ function TemplateDrivenCreate(
   return (
     <WorkflowHost
       initialDraft={draft}
-      // Switching chips remounts the whole workflow so the editor resets to
-      // the newly chosen template without a dirty-state confirmation.
-      key={selectedId}
+      // Keyed by the LOADED package identity, not the clicked chip id: the
+      // previous key (and editor) stays mounted while the next template
+      // loads, then the workflow remounts — resetting to the new template
+      // without a dirty-state confirmation — exactly when its data arrives.
+      key={loadedPackage.manifest.id}
       onBack={onBack}
       onFinished={onFinished}
       presetPicker={

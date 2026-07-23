@@ -174,20 +174,23 @@ to demo-feel; guarantees belong in behavior, not banners.
 ### Convention: frameless window drag regions
 
 **What**: the window uses `titleBarStyle: "Overlay"` + `hiddenTitle`
-(tauri.conf.json). Draggability comes from three leaf surfaces in `App.tsx`
-carrying `data-tauri-drag-region` (updated 2026-07-22 for the top-bar shell):
-the fixed full-width `h-7` top strip, the top-bar brand row (its svg needs
-`pointer-events-none`), and the top-bar flexible spacer between brand and
+(tauri.conf.json). The header is two stacked zones (2026-07-23): a `h-9`
+traffic-light clearance row on top, then the main row (brand left, controls
+right) — the brand sits BELOW the macOS window controls, not beside them.
+Draggability comes from four leaf surfaces in `App.tsx` carrying
+`data-tauri-drag-region`: the fixed full-width `h-7` top strip, the `h-9`
+traffic-light spacer row, the brand row (its svg needs
+`pointer-events-none`), and the main row's flexible spacer between brand and
 controls. Tauri's injected handler matches the attribute via the ancestor
 chain (`closest`), so a tagged container makes EVERY descendant — including
 buttons — start a window drag on mousedown and lose its click. Never tag a
 container that holds interactive children; tag only empty/text leaf surfaces.
 
-> **Warning**: the top-bar interactive cluster (SegmentedControl + icon
-> buttons + "+") must keep `relative z-[60]`. The fixed drag strip is `z-50`
-> and overlaps the upper ~28px of controls vertically centered in the `h-16`
-> bar; without the raised z-index the top half of every top-bar button feeds
-> clicks to window dragging.
+> **Warning**: the header's interactive cluster (SegmentedControl + icon
+> buttons + "+") keeps `relative z-[60]` as a safety net. Controls currently
+> sit below the fixed `z-50` drag strip, but if the layout ever shifts back
+> up, the raised z-index is what stops the strip from swallowing clicks on
+> the buttons' upper edge (regression a20b7d4).
 
 **Why**: removing either region makes the frameless window undraggable;
 interactive elements inside a drag region become unclickable. The attributes

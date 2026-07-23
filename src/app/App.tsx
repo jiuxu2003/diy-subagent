@@ -49,75 +49,81 @@ export function App() {
           the ancestor chain (closest), so ANY interactive element inside a
           tagged container loses its clicks to window dragging. The attribute
           therefore lives only on leaf surfaces with no interactive children:
-          the top strip, the brand row, and the flexible spacer between the
-          brand and the controls. The control cluster is raised above the
-          fixed strip (z-index) so the strip can never swallow clicks on the
-          upper edge of its buttons. */}
-      <header className="flex h-16 shrink-0 items-center gap-4 pl-20 pr-5">
-        <p
-          className="flex items-center gap-2.5 text-lg font-semibold tracking-tight"
-          data-tauri-drag-region
-        >
-          {/* pointer-events-none keeps the svg from eating mousedown inside
-              the drag region. */}
-          <BrandMark className="pointer-events-none size-6" />
-          DIY Subagent
-        </p>
+          the fixed top strip, the traffic-light spacer row, the brand row,
+          and the flexible spacer between the brand and the controls. The
+          control cluster keeps a raised z-index as a safety net so the fixed
+          strip can never swallow clicks if the layout ever shifts back up. */}
+      <header className="shrink-0">
+        {/* Traffic-light clearance row: the brand sits below the macOS
+            window controls instead of beside them. Pure drag leaf. */}
+        <div className="h-9" data-tauri-drag-region />
 
-        {/* Empty flexible area doubles as the top bar's draggable body. */}
-        <div className="h-full min-w-0 flex-1" data-tauri-drag-region />
+        <div className="flex h-14 items-center gap-4 px-8">
+          <p
+            className="flex items-center gap-2.5 text-lg font-semibold tracking-tight"
+            data-tauri-drag-region
+          >
+            {/* pointer-events-none keeps the svg from eating mousedown inside
+                the drag region. */}
+            <BrandMark className="pointer-events-none size-6" />
+            DIY Subagent
+          </p>
 
-        <div className="relative z-[60] flex items-center gap-3">
-          <SegmentedControl
-            aria-label="平台"
-            items={platformItems}
-            onChange={selectPlatform}
-            value={platform}
-          />
-          <div className="flex items-center gap-1">
+          {/* Empty flexible area doubles as the top bar's draggable body. */}
+          <div className="h-full min-w-0 flex-1" data-tauri-drag-region />
+
+          <div className="relative z-[60] flex items-center gap-3">
+            <SegmentedControl
+              aria-label="平台"
+              items={platformItems}
+              onChange={selectPlatform}
+              value={platform}
+            />
+            <div className="flex items-center gap-1">
+              <Button
+                aria-label="刷新"
+                onClick={() => {
+                  void queryClient.invalidateQueries({
+                    queryKey: queryKeys.inventory.all,
+                  });
+                }}
+                size="icon"
+                variant="ghost"
+              >
+                <RefreshCw className="size-4" aria-hidden="true" />
+              </Button>
+              <Button
+                aria-label={theme === "dark" ? "切换浅色" : "切换深色"}
+                onClick={toggleTheme}
+                size="icon"
+                variant="ghost"
+              >
+                {theme === "dark"
+                  ? <Sun className="size-4" aria-hidden="true" />
+                  : <Moon className="size-4" aria-hidden="true" />}
+              </Button>
+              <Button
+                aria-label="设置"
+                onClick={() => {
+                  setAppView({ view: "settings" });
+                }}
+                size="icon"
+                variant="ghost"
+              >
+                <Settings className="size-4" aria-hidden="true" />
+              </Button>
+            </div>
             <Button
-              aria-label="刷新"
+              aria-label="新建 Subagent"
               onClick={() => {
-                void queryClient.invalidateQueries({
-                  queryKey: queryKeys.inventory.all,
-                });
+                setAppView({ view: "create", importedDraft: null });
               }}
-              size="icon"
-              variant="ghost"
+              size="iconRound"
+              variant="brand"
             >
-              <RefreshCw className="size-4" aria-hidden="true" />
-            </Button>
-            <Button
-              aria-label={theme === "dark" ? "切换浅色" : "切换深色"}
-              onClick={toggleTheme}
-              size="icon"
-              variant="ghost"
-            >
-              {theme === "dark"
-                ? <Sun className="size-4" aria-hidden="true" />
-                : <Moon className="size-4" aria-hidden="true" />}
-            </Button>
-            <Button
-              aria-label="设置"
-              onClick={() => {
-                setAppView({ view: "settings" });
-              }}
-              size="icon"
-              variant="ghost"
-            >
-              <Settings className="size-4" aria-hidden="true" />
+              <Plus className="size-5" aria-hidden="true" />
             </Button>
           </div>
-          <Button
-            aria-label="新建 Subagent"
-            onClick={() => {
-              setAppView({ view: "create", importedDraft: null });
-            }}
-            size="iconRound"
-            variant="brand"
-          >
-            <Plus className="size-5" aria-hidden="true" />
-          </Button>
         </div>
       </header>
 

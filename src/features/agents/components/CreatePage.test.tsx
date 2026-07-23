@@ -175,6 +175,38 @@ describe("CreatePage", () => {
     expect(screen.getByText(/审查代码变更/)).toBeVisible();
   });
 
+  it("keeps the editor mounted while a newly clicked template loads", async () => {
+    const user = userEvent.setup();
+    let resolveNext!: (value: TemplatePackage) => void;
+    ipcMocks.listTemplates.mockResolvedValue(summaries);
+    ipcMocks.getTemplate
+      .mockResolvedValueOnce(customBlankPackage)
+      .mockImplementationOnce(() =>
+        new Promise<TemplatePackage>((resolve) => {
+          resolveNext = resolve;
+        })
+      );
+
+    renderCreatePage();
+    expect(await screen.findByDisplayValue("my-agent")).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "代码审查员" }));
+
+    // The chip selection moves immediately, but the previous template's
+    // editor stays mounted instead of flashing the loading page.
+    expect(screen.getByRole("button", { name: "代码审查员" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByDisplayValue("my-agent")).toBeVisible();
+    expect(screen.queryByText("正在读取模板…")).not.toBeInTheDocument();
+
+    resolveNext(codeReviewerPackage);
+
+    expect(await screen.findByDisplayValue("code-review-helper")).toBeVisible();
+    expect(screen.queryByDisplayValue("my-agent")).not.toBeInTheDocument();
+  });
+
   it("renders no preset chips in import mode", async () => {
     renderCreatePage(importedDraft);
 
