@@ -11,21 +11,23 @@
     "IBM Plex Mono", "SF Mono", "SFMono-Regular", ui-monospace, Menlo, Monaco,
     Consolas, monospace;
 
-  /* Compact desktop type scale: 14px body baseline. */
-  --text-xs: 12px;
-  --text-xs--line-height: 17px;
-  --text-sm: 14px;
-  --text-sm--line-height: 21px;
-  --text-base: 14px;
-  --text-base--line-height: 21px;
-  --text-lg: 16px;
-  --text-lg--line-height: 23px;
-  --text-xl: 18px;
-  --text-xl--line-height: 25px;
-  --text-2xl: 21px;
-  --text-2xl--line-height: 28px;
-  --text-3xl: 25px;
-  --text-3xl--line-height: 32px;
+  /* Compact desktop type scale: 14px body baseline at the 16px root size.
+     Sizes are rem so the whole UI scales with the html font-size clamp
+     below; the px comments give each value at the 16px baseline. */
+  --text-xs: 0.75rem; /* 12px */
+  --text-xs--line-height: 1.0625rem; /* 17px */
+  --text-sm: 0.875rem; /* 14px */
+  --text-sm--line-height: 1.3125rem; /* 21px */
+  --text-base: 0.875rem; /* 14px */
+  --text-base--line-height: 1.3125rem; /* 21px */
+  --text-lg: 1rem; /* 16px */
+  --text-lg--line-height: 1.4375rem; /* 23px */
+  --text-xl: 1.125rem; /* 18px */
+  --text-xl--line-height: 1.5625rem; /* 25px */
+  --text-2xl: 1.3125rem; /* 21px */
+  --text-2xl--line-height: 1.75rem; /* 28px */
+  --text-3xl: 1.5625rem; /* 25px */
+  --text-3xl--line-height: 2rem; /* 32px */
 }
 
 :root {
@@ -114,6 +116,11 @@ html {
   background: var(--background);
   color: var(--text);
   font-family: var(--font-sans);
+  /* Proportional UI scaling: 16px baseline up to ~1440px window width,
+     scaling linearly (1.111vw) to 19px at >=~1710px (fullscreen), so the
+     whole rem-based UI (type, Tailwind spacing, radii) grows proportionally
+     with the window; hairline borders stay px on purpose. */
+  font-size: clamp(16px, 1.111vw, 19px);
   text-rendering: optimizeLegibility;
 }
 

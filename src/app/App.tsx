@@ -1,4 +1,4 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import { Moon, Plus, RefreshCw, Settings, Sun } from "lucide-react";
 import { useState } from "react";
 
@@ -14,6 +14,7 @@ import { HomePage } from "../features/agents/components/HomePage";
 import { useInventoryEvents } from "../features/agents/hooks/useInventoryEvents";
 import { usePersistedPlatform } from "../features/agents/hooks/usePersistedPlatform";
 import { SettingsPage } from "../features/settings/components/SettingsPage";
+import { cn } from "../lib/formatting/cn";
 import { platformLabel } from "../lib/formatting/platform";
 import { queryKeys } from "../lib/query/queryKeys";
 import { useTheme } from "./providers/themeContext";
@@ -34,6 +35,10 @@ export function App() {
   const [platform, selectPlatform] = usePersistedPlatform();
   const { theme, toggleTheme } = useTheme();
   const queryClient = useQueryClient();
+  // Refresh feedback: any in-flight inventory query (prefix match) spins the
+  // icon and disables the button, so identical results still show activity.
+  const isRefreshingInventory =
+    useIsFetching({ queryKey: queryKeys.inventory.all }) > 0;
   useInventoryEvents();
 
   const goHome = () => {
@@ -92,15 +97,27 @@ export function App() {
                 ? (
                   <Button
                     aria-label="刷新"
+                    disabled={isRefreshingInventory}
                     onClick={() => {
+                      // refetchType "all" also refetches inactive inventory
+                      // queries, so a refresh is never silently skipped.
                       void queryClient.invalidateQueries({
                         queryKey: queryKeys.inventory.all,
+                        refetchType: "all",
                       });
                     }}
                     size="icon"
                     variant="ghost"
                   >
-                    <RefreshCw className="size-4" aria-hidden="true" />
+                    {/* animate-spin is neutralized by the global
+                        prefers-reduced-motion rule in globals.css. */}
+                    <RefreshCw
+                      className={cn(
+                        "size-4",
+                        isRefreshingInventory && "animate-spin",
+                      )}
+                      aria-hidden="true"
+                    />
                   </Button>
                 )
                 : null}

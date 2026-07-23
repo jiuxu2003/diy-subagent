@@ -101,11 +101,17 @@ All values below are contracts, not suggestions:
   (`--accent`: `#007aff` light / `#0a84ff` dark). Surfaces are neutral gray —
   never blue-tinted grays, never gradients. No orange (CC-Switch's "+" color
   was deliberately not copied).
-- **Type scale**: unchanged from 2026-07 — `text-xs` 12px, `text-sm`/`text-base`
-  14px (body baseline), `text-lg` 16px, `text-xl` 18px, `text-2xl` 21px (page
-  titles), `text-3xl` 25px (max). `text-4xl+` is forbidden. Page header =
-  back button (when a sub-page) + `text-2xl font-semibold tracking-tight` over
-  a hairline. (13px baseline was rejected as too small in user review, 2026-07.)
+- **Type scale**: defined in rem since 2026-07-23 (px equivalents at the 16px
+  root baseline) — `text-xs` 0.75rem (12px), `text-sm`/`text-base` 0.875rem
+  (14px, body baseline), `text-lg` 1rem (16px), `text-xl` 1.125rem (18px),
+  `text-2xl` 1.3125rem (21px, page titles), `text-3xl` 1.5625rem (25px, max).
+  `text-4xl+` is forbidden. The `html` rule sets
+  `font-size: clamp(16px, 1.111vw, 19px)`: 16px baseline up to ~1440px window
+  width, scaling linearly to 19px at ≥~1710px (fullscreen), so the whole
+  rem-based UI (type, Tailwind spacing, radii) grows proportionally with the
+  window; hairline borders deliberately stay px. Page header = back button
+  (when a sub-page) + `text-2xl font-semibold tracking-tight` over a hairline.
+  (13px baseline was rejected as too small in user review, 2026-07.)
 - **Fonts**: UI text uses the system stack (SF Pro + PingFang — never replace
   it). Data (paths, logical names, ids, diffs) uses `font-mono` = IBM Plex
   Mono, bundled offline via `@fontsource/ibm-plex-mono` imports in `main.tsx`.
