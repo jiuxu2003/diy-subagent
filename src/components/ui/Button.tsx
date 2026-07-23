@@ -16,12 +16,15 @@ const buttonVariants = cva(
         ghost:
           "text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]",
         danger: "bg-[var(--danger)] text-white hover:bg-[var(--danger-strong)]",
+        /** Identity purple-blue, reserved for the round "+" create button. */
+        brand: "bg-[var(--brand)] text-white hover:opacity-90",
       },
       size: {
         sm: "h-7.5 px-2.5 text-xs",
         md: "h-8.5 px-3.5",
         lg: "h-9.5 px-4",
         icon: "size-7.5 p-0",
+        iconRound: "size-10 rounded-full p-0",
       },
     },
     defaultVariants: {

@@ -1,4 +1,3 @@
-import { ChevronLeft } from "lucide-react";
 import { useState } from "react";
 
 import type {
@@ -121,27 +120,11 @@ export function StructuredEditor({
   };
 
   return (
-    <section
-      aria-labelledby="agent-editor-heading"
-      className="mx-auto max-w-5xl space-y-7"
-    >
-      <header>
-        <Button onClick={onBack} size="sm" variant="ghost">
-          <ChevronLeft className="size-4" aria-hidden="true" />
-          返回模板库
-        </Button>
-        <h1
-          id="agent-editor-heading"
-          className="mt-3 text-2xl font-semibold tracking-tight"
-        >
-          编辑 <span className="font-mono">{draft.logicalName}</span>
-        </h1>
-      </header>
-
+    <section aria-label="结构化编辑" className="space-y-8">
       {error
         ? (
           <div
-            className="rounded-md border border-[var(--danger-border)] bg-[var(--danger-soft)] px-4 py-3 text-sm font-medium text-[var(--danger)]"
+            className="rounded-xl border border-[var(--danger-border)] bg-[var(--danger-soft)] px-4 py-3 text-sm font-medium text-[var(--danger)]"
             role="alert"
           >
             {error}
@@ -153,7 +136,7 @@ export function StructuredEditor({
         title="身份与委派描述"
         description="名称决定文件名与调用标识；描述决定何时自动委派。"
       >
-        <div className="grid grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] gap-4">
+        <div className="grid grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] gap-5">
           <FieldShell
             htmlFor="logical-name"
             label="逻辑名称"
@@ -191,7 +174,7 @@ export function StructuredEditor({
       </EditorSection>
 
       <EditorSection title="共享语义章节">
-        <div className="space-y-4">
+        <div className="space-y-5">
           <TextField
             id="role-goal"
             label="角色目标"
@@ -200,7 +183,7 @@ export function StructuredEditor({
               updateShared("roleGoal", value);
             }}
           />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-5">
             <ListField
               id="when-to-use"
               label="适用场景"
@@ -242,7 +225,7 @@ export function StructuredEditor({
               updateShared("outputContract", value);
             }}
           />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-5">
             <ListField
               id="constraints"
               label="约束"
@@ -272,7 +255,7 @@ export function StructuredEditor({
       </EditorSection>
 
       <EditorSection title="语言与使用契约">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-5">
           <FieldShell htmlFor="response-language" label="响应语言">
             <Select
               id="response-language"
@@ -314,7 +297,7 @@ export function StructuredEditor({
       </EditorSection>
 
       <EditorSection title="目标平台与高级字段">
-        <div className="divide-y divide-[var(--border)] rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+        <div className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)] bg-[var(--surface)]">
           {platforms.map((platform) => (
             <PlatformTarget
               draft={draft}
@@ -332,7 +315,7 @@ export function StructuredEditor({
         title="保存为个人模板"
         description="模板保存在本机，可重复使用。"
       >
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-5">
           <FieldShell htmlFor="personal-template-name" label="模板名称">
             <Input
               id="personal-template-name"
@@ -362,17 +345,22 @@ export function StructuredEditor({
           : null}
       </EditorSection>
 
-      <footer className="sticky bottom-0 flex items-center justify-between gap-4 border-t border-[var(--border)] bg-[var(--background)] py-3">
+      <footer className="sticky bottom-0 flex items-center justify-between gap-4 border-t border-[var(--border)] bg-[var(--background)] py-4">
         <p className="text-sm text-[var(--text-muted)]">
           已选 {targets.length} 个平台
         </p>
-        <Button
-          disabled={isPreviewing || targets.length === 0}
-          onClick={onPreview}
-          size="lg"
-        >
-          {isPreviewing ? "正在生成预览…" : "生成预览"}
-        </Button>
+        <div className="flex items-center gap-2.5">
+          <Button onClick={onBack} size="lg" variant="ghost">
+            取消
+          </Button>
+          <Button
+            disabled={isPreviewing || targets.length === 0}
+            onClick={onPreview}
+            size="lg"
+          >
+            {isPreviewing ? "正在生成预览…" : "生成预览"}
+          </Button>
+        </div>
       </footer>
     </section>
   );
@@ -388,12 +376,12 @@ function EditorSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="space-y-4">
-      <div className="border-b border-[var(--border)] pb-2">
-        <h2 className="text-sm font-semibold">{title}</h2>
+    <section className="space-y-5">
+      <div className="border-b border-[var(--border)] pb-2.5">
+        <h2 className="text-base font-semibold">{title}</h2>
         {description
           ? (
-            <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+            <p className="mt-1 text-sm text-[var(--text-muted)]">
               {description}
             </p>
           )
@@ -569,7 +557,7 @@ function PlatformAdvancedFields({
 
   if (value.platform === "claude") {
     return (
-      <div className="mt-3 grid grid-cols-3 gap-4 border-t border-[var(--border)] pt-3">
+      <div className="mt-3 grid grid-cols-3 gap-5 border-t border-[var(--border)] pt-3">
         <FieldShell htmlFor="claude-model" label="model">
           <Input
             id="claude-model"
@@ -622,7 +610,7 @@ function PlatformAdvancedFields({
   }
   if (value.platform === "codex") {
     return (
-      <div className="mt-3 grid grid-cols-3 gap-4 border-t border-[var(--border)] pt-3">
+      <div className="mt-3 grid grid-cols-3 gap-5 border-t border-[var(--border)] pt-3">
         <FieldShell htmlFor="codex-model" label="model">
           <Input
             id="codex-model"
@@ -675,7 +663,7 @@ function PlatformAdvancedFields({
     );
   }
   return (
-    <div className="mt-3 grid grid-cols-3 gap-4 border-t border-[var(--border)] pt-3">
+    <div className="mt-3 grid grid-cols-3 gap-5 border-t border-[var(--border)] pt-3">
       <FieldShell htmlFor="cursor-model" label="model">
         <Input
           id="cursor-model"
@@ -692,7 +680,7 @@ function PlatformAdvancedFields({
           value={value.config.model ?? ""}
         />
       </FieldShell>
-      <label className="flex items-center gap-2.5 self-end rounded-md border border-[var(--border)] px-3 py-1.5 text-sm font-medium">
+      <label className="flex items-center gap-2.5 self-end rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm font-medium">
         <input
           checked={value.config.readonly ?? false}
           className="size-4 accent-[var(--accent)]"
@@ -709,7 +697,7 @@ function PlatformAdvancedFields({
         />
         readonly
       </label>
-      <label className="flex items-center gap-2.5 self-end rounded-md border border-[var(--border)] px-3 py-1.5 text-sm font-medium">
+      <label className="flex items-center gap-2.5 self-end rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm font-medium">
         <input
           checked={value.config.isBackground ?? false}
           className="size-4 accent-[var(--accent)]"

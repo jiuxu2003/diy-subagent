@@ -1,0 +1,4 @@
+{"file": ".trellis/tasks/07-22-ccswitch-style-ui/research/cc-switch-style.md", "reason": "视觉验收对照表：卡片/胶囊/分段控件是否符合量化基线"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "验证 pnpm lint/typecheck/test/test:e2e 全绿与 UI 文案规范"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "验证 cargo fmt/clippy/test 全绿（第 7 个内置模板）"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "验证契约零改动：src/contracts、dto、fixtures 无 diff"}

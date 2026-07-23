@@ -8,7 +8,7 @@ import type {
   TargetSelection,
 } from "../../../contracts";
 import { Button } from "../../../components/ui/Button";
-import { StatusDot } from "../../../components/ui/StatusDot";
+import { Pill } from "../../../components/ui/Pill";
 import { cn } from "../../../lib/formatting/cn";
 import { platformLabel } from "../../../lib/formatting/platform";
 
@@ -55,7 +55,7 @@ export function PreviewReview({
   if (!firstTarget) {
     return (
       <section
-        className="mx-auto max-w-3xl rounded-md border border-[var(--danger-border)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]"
+        className="rounded-xl border border-[var(--danger-border)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]"
         role="alert"
       >
         预览结果不包含任何目标平台，请返回编辑并重新生成。
@@ -74,22 +74,21 @@ export function PreviewReview({
   });
 
   return (
-    <section
-      aria-labelledby="preview-heading"
-      className="mx-auto max-w-6xl space-y-5"
-    >
+    <section aria-labelledby="preview-heading" className="space-y-5">
       <header className="flex items-end justify-between gap-6">
         <div>
           <Button onClick={onBack} size="sm" variant="ghost">
             <ArrowLeft className="size-4" aria-hidden="true" />
             返回编辑
           </Button>
-          <h1
+          {/* Section-rank heading: the page-rank h1 lives in the CreatePage
+              header rendered above this screen. */}
+          <h2
             id="preview-heading"
-            className="mt-3 text-2xl font-semibold tracking-tight"
+            className="mt-3 text-xl font-semibold tracking-tight"
           >
             确认安装
-          </h1>
+          </h2>
           <p className="mt-1 text-sm text-[var(--text-muted)]">
             内容修改后需重新生成预览。
           </p>
@@ -102,7 +101,7 @@ export function PreviewReview({
       {error
         ? (
           <div
-            className="rounded-md border border-[var(--danger-border)] bg-[var(--danger-soft)] px-4 py-3 text-sm font-medium text-[var(--danger)]"
+            className="rounded-xl border border-[var(--danger-border)] bg-[var(--danger-soft)] px-4 py-3 text-sm font-medium text-[var(--danger)]"
             role="alert"
           >
             <p>{error}</p>
@@ -127,7 +126,7 @@ export function PreviewReview({
 
       {blockingConflict
         ? (
-          <div className="rounded-md bg-[var(--warning-soft)] px-4 py-3 text-sm text-[var(--warning)]">
+          <div className="rounded-xl bg-[var(--warning-soft)] px-4 py-3 text-sm text-[var(--warning)]">
             <p className="font-medium">存在名称冲突，当前策略会阻止提交</p>
             <p className="mt-1">
               返回编辑后修改逻辑名称，或为对应平台选择“备份后替换”。
@@ -137,13 +136,14 @@ export function PreviewReview({
         : null}
 
       <Tabs.Root defaultValue={firstTarget.platform}>
+        {/* Styled to match the SegmentedControl primitive in the top bar. */}
         <Tabs.List
-          className="inline-flex rounded-md border border-[var(--border)] bg-[var(--surface-muted)] p-0.5"
+          className="inline-flex items-center gap-0.5 rounded-lg bg-[var(--surface-muted)] p-1"
           aria-label="平台预览"
         >
           {preview.targets.map((target) => (
             <Tabs.Trigger
-              className="rounded px-4 py-1 text-sm font-medium text-[var(--text-muted)] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--focus)] data-[state=active]:bg-[var(--surface)] data-[state=active]:text-[var(--text)]"
+              className="inline-flex h-7 items-center rounded-md px-3 text-sm font-medium text-[var(--text-muted)] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--focus)] data-[state=active]:bg-[var(--surface)] data-[state=active]:text-[var(--text)] data-[state=active]:shadow-[var(--shadow-card)]"
               key={target.platform}
               value={target.platform}
             >
@@ -158,7 +158,7 @@ export function PreviewReview({
             value={target.platform}
           >
             <div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-4">
-              <div className="self-start rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+              <div className="self-start rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
                 <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] px-4 py-3">
                   <div className="min-w-0">
                     <p className="text-xs text-[var(--text-muted)]">路径</p>
@@ -166,12 +166,12 @@ export function PreviewReview({
                       {target.targetPath}
                     </p>
                   </div>
-                  <StatusDot
+                  <Pill
                     className="mt-0.5 shrink-0"
                     tone={target.conflictDetected ? "warning" : "success"}
                   >
                     {target.conflictDetected ? "发现冲突" : "预检通过"}
-                  </StatusDot>
+                  </Pill>
                 </div>
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-3 px-4 py-3">
                   <Definition
@@ -201,13 +201,13 @@ export function PreviewReview({
                       <p className="text-xs text-[var(--text-muted)]">兼容性</p>
                       {target.capabilityIssues.map((issue) => (
                         <div key={issue.id}>
-                          <StatusDot
+                          <Pill
                             tone={dispositionPresentation[issue.disposition]
                               .tone}
                           >
                             {dispositionPresentation[issue.disposition].label}
-                          </StatusDot>
-                          <p className="mt-0.5 text-sm leading-5 text-[var(--text-muted)]">
+                          </Pill>
+                          <p className="mt-1 text-sm leading-5 text-[var(--text-muted)]">
                             {issue.explanation}
                           </p>
                         </div>
@@ -261,7 +261,7 @@ function CodePanel(
   },
 ) {
   return (
-    <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
       <div className="border-b border-[var(--border)] px-4 py-2 text-sm font-medium">
         {title}
       </div>

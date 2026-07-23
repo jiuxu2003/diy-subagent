@@ -185,12 +185,15 @@ mod tests {
     }
 
     #[test]
-    fn all_six_builtin_templates_render_deterministically_for_every_platform() {
+    fn all_seven_builtin_templates_render_deterministically_for_every_platform() {
         let temporary = tempdir().expect("temporary directory creates");
         let service = service(&temporary);
         let summaries = service.list_templates();
 
-        assert_eq!(summaries.len(), 6);
+        assert_eq!(summaries.len(), 7);
+        assert!(summaries
+            .iter()
+            .any(|summary| summary.id == "custom-blank" && summary.name == "自定义"));
         for summary in summaries {
             let package = service
                 .get_template(&summary.id)

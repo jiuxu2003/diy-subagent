@@ -1,4 +1,5 @@
 import { useReducer } from "react";
+import type { ReactNode } from "react";
 
 import type { AgentDraft } from "../../../contracts";
 import { errorMessage } from "../../../lib/formatting/error";
@@ -24,6 +25,12 @@ interface AgentWorkflowProps {
   onFinished: () => void;
   onSavePersonalTemplate: (name: string, draft: AgentDraft) => Promise<void>;
   personalTemplateSaveMessage: string | null;
+  /**
+   * Optional preset chooser rendered above the structured editor. It belongs
+   * to the editing screen only, so the preview and success screens never
+   * show it.
+   */
+  presetPicker?: ReactNode;
 }
 
 export function AgentWorkflow(
@@ -34,6 +41,7 @@ export function AgentWorkflow(
     onFinished,
     onSavePersonalTemplate,
     personalTemplateSaveMessage,
+    presetPicker,
   }: AgentWorkflowProps,
 ) {
   const [state, dispatch] = useReducer(
@@ -91,7 +99,7 @@ export function AgentWorkflow(
     return (
       <InstallSuccess
         draft={state.draft}
-        onCreateAnother={onFinished}
+        onBackHome={onFinished}
         result={state.result}
       />
     );
@@ -125,28 +133,31 @@ export function AgentWorkflow(
   }
 
   return (
-    <StructuredEditor
-      draft={state.draft}
-      error={state.status === "failed" || state.status === "editing"
-        ? state.error
-        : null}
-      isPreviewing={state.status === "previewing"}
-      isSavingPersonalTemplate={isSavingPersonalTemplate}
-      onBack={onBack}
-      onDraftChange={(draft) => {
-        dispatch({ type: "replaceDraft", draft });
-      }}
-      onPreview={() => {
-        void requestPreview();
-      }}
-      onSavePersonalTemplate={(name) => {
-        void onSavePersonalTemplate(name, state.draft);
-      }}
-      onTargetsChange={(targets) => {
-        dispatch({ type: "setTargets", targets });
-      }}
-      personalTemplateSaveMessage={personalTemplateSaveMessage}
-      targets={state.targets}
-    />
+    <>
+      {presetPicker ? <div className="mb-8">{presetPicker}</div> : null}
+      <StructuredEditor
+        draft={state.draft}
+        error={state.status === "failed" || state.status === "editing"
+          ? state.error
+          : null}
+        isPreviewing={state.status === "previewing"}
+        isSavingPersonalTemplate={isSavingPersonalTemplate}
+        onBack={onBack}
+        onDraftChange={(draft) => {
+          dispatch({ type: "replaceDraft", draft });
+        }}
+        onPreview={() => {
+          void requestPreview();
+        }}
+        onSavePersonalTemplate={(name) => {
+          void onSavePersonalTemplate(name, state.draft);
+        }}
+        onTargetsChange={(targets) => {
+          dispatch({ type: "setTargets", targets });
+        }}
+        personalTemplateSaveMessage={personalTemplateSaveMessage}
+        targets={state.targets}
+      />
+    </>
   );
 }

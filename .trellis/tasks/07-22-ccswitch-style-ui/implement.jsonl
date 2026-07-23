@@ -1,0 +1,6 @@
+{"file": ".trellis/tasks/07-22-ccswitch-style-ui/research/cc-switch-style.md", "reason": "CC-Switch 视觉量化基线（圆角/阴影/胶囊/分段控件规格），实现时的唯一风格参照"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "新增 Pill/SegmentedControl 原语与改造 Button 需遵循的组件规范（CVA/Radix/cn 约定）"}
+{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "HomePage/CreatePage 改名与 TemplateLibrary 删除后的 feature-first 归位规则"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "TanStack Query 所有权与本地视图状态边界：AppView 状态机、usePersistedPlatform、invalidateQueries 用法"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "lint/typecheck/vitest 门禁与中文 UI 文案约定"}
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "custom-blank 模板资源文件与 infrastructure/templates 注册位置的分层规则"}

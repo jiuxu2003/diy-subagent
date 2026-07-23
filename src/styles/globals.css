@@ -43,7 +43,8 @@
   --accent: #007aff;
   --accent-strong: #0066d6;
   --accent-soft: rgba(0, 122, 255, 0.12);
-  /* Identity-only tint: BrandMark, empty-state art, success check. Never functional. */
+  /* Identity tint: BrandMark, empty-state art, success check, and the round
+     "+" create button (PRD D3). Never for selection, focus, or status. */
   --brand: #6c74f6;
   --code-bg: #f6f6f8;
   --code-text: #403f53;
@@ -57,7 +58,13 @@
   --danger-strong: #b3000f;
   --danger-soft: rgba(255, 59, 48, 0.12);
   --danger-border: rgba(215, 0, 21, 0.35);
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
+  /* Layered soft card shadows (CC-Switch style): resting + hover lift. */
+  --shadow-card:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover:
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    0 8px 24px rgba(0, 0, 0, 0.08);
   --shadow-window: none;
 }
 
@@ -89,7 +96,13 @@
   --danger-strong: #ff8a80;
   --danger-soft: rgba(255, 105, 97, 0.16);
   --danger-border: rgba(255, 105, 97, 0.35);
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.2);
+  /* Dark shadows need higher opacity to read against dark surfaces. */
+  --shadow-card:
+    0 1px 2px rgba(0, 0, 0, 0.25),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-card-hover:
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    0 8px 24px rgba(0, 0, 0, 0.35);
   --shadow-window: none;
 }
 

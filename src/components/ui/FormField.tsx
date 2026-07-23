@@ -28,7 +28,7 @@ export function FieldShell({
     <div className="space-y-2">
       <div className="flex items-baseline justify-between gap-4">
         <label
-          className="text-xs font-medium text-[var(--text-muted)]"
+          className="text-sm font-medium text-[var(--text-muted)]"
           htmlFor={htmlFor}
         >
           {label}
@@ -53,7 +53,7 @@ export function FieldShell({
 }
 
 const fieldClassName =
-  "w-full rounded-md border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-sm text-[var(--text)] outline-none transition placeholder:text-[var(--text-subtle)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--focus-soft)] disabled:opacity-50";
+  "w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text)] outline-none transition placeholder:text-[var(--text-subtle)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--focus-soft)] disabled:opacity-50";
 
 export function Input(
   { className, ...props }: InputHTMLAttributes<HTMLInputElement>,

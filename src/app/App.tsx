@@ -1,37 +1,47 @@
-import { Boxes, Moon, Settings, Sun, WandSparkles } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Moon, Plus, RefreshCw, Settings, Sun } from "lucide-react";
 import { useState } from "react";
 
-import type { AgentDraft } from "../contracts";
+import type { AgentDraft, AgentPlatform } from "../contracts";
 import { BrandMark } from "../components/ui/BrandMark";
 import { Button } from "../components/ui/Button";
-import { InstalledPage } from "../features/agents/components/InstalledPage";
+import {
+  SegmentedControl,
+  type SegmentedControlItem,
+} from "../components/ui/SegmentedControl";
+import { CreatePage } from "../features/agents/components/CreatePage";
+import { HomePage } from "../features/agents/components/HomePage";
 import { useInventoryEvents } from "../features/agents/hooks/useInventoryEvents";
+import { usePersistedPlatform } from "../features/agents/hooks/usePersistedPlatform";
 import { SettingsPage } from "../features/settings/components/SettingsPage";
-import { TemplatesPage } from "../features/templates/components/TemplatesPage";
-import { cn } from "../lib/formatting/cn";
+import { platformLabel } from "../lib/formatting/platform";
+import { queryKeys } from "../lib/query/queryKeys";
 import { useTheme } from "./providers/themeContext";
 
-type NavigationItem = "templates" | "installed" | "settings";
+type AppView =
+  | { view: "home" }
+  | { view: "create"; importedDraft: AgentDraft | null }
+  | { view: "settings" };
 
-const navigation = [
-  { id: "templates", label: "模板", icon: WandSparkles },
-  { id: "installed", label: "已安装", icon: Boxes },
-  { id: "settings", label: "设置", icon: Settings },
-] satisfies { id: NavigationItem; label: string; icon: typeof WandSparkles }[];
+const platformItems = [
+  { id: "claude", label: platformLabel("claude") },
+  { id: "codex", label: platformLabel("codex") },
+  { id: "cursor", label: platformLabel("cursor") },
+] satisfies SegmentedControlItem<AgentPlatform>[];
 
 export function App() {
-  const [active, setActive] = useState<NavigationItem>("templates");
-  const [importedDraft, setImportedDraft] = useState<AgentDraft | null>(null);
+  const [appView, setAppView] = useState<AppView>({ view: "home" });
+  const [platform, selectPlatform] = usePersistedPlatform();
   const { theme, toggleTheme } = useTheme();
+  const queryClient = useQueryClient();
   useInventoryEvents();
 
-  const importDraft = (draft: AgentDraft) => {
-    setImportedDraft(draft);
-    setActive("templates");
+  const goHome = () => {
+    setAppView({ view: "home" });
   };
 
   return (
-    <div className="grid h-screen grid-cols-[220px_minmax(0,1fr)] bg-[var(--background)]">
+    <div className="flex h-screen flex-col bg-[var(--background)]">
       {/* Overlay title bar drag strip; must contain no interactive children. */}
       <div className="fixed inset-x-0 top-0 z-50 h-7" data-tauri-drag-region />
 
@@ -39,78 +49,99 @@ export function App() {
           the ancestor chain (closest), so ANY interactive element inside a
           tagged container loses its clicks to window dragging. The attribute
           therefore lives only on leaf surfaces with no interactive children:
-          the top strip, the traffic-light spacer, the brand row, and the
-          empty filler below the nav. */}
-      <aside className="flex min-h-0 flex-col border-r border-[var(--border)] bg-[var(--sidebar)]">
-        {/* Spacer keeps sidebar content clear of the macOS traffic lights. */}
-        <div className="h-11 shrink-0" data-tauri-drag-region />
-
+          the top strip, the brand row, and the flexible spacer between the
+          brand and the controls. The control cluster is raised above the
+          fixed strip (z-index) so the strip can never swallow clicks on the
+          upper edge of its buttons. */}
+      <header className="flex h-16 shrink-0 items-center gap-4 pl-20 pr-5">
         <p
-          className="flex items-center gap-2 px-4 text-sm font-semibold tracking-tight"
+          className="flex items-center gap-2.5 text-lg font-semibold tracking-tight"
           data-tauri-drag-region
         >
           {/* pointer-events-none keeps the svg from eating mousedown inside
               the drag region. */}
-          <BrandMark className="size-5 pointer-events-none" />
+          <BrandMark className="pointer-events-none size-6" />
           DIY Subagent
         </p>
 
-        <nav aria-label="主导航" className="mt-4 space-y-0.5 px-2">
-          {navigation.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                className={cn(
-                  "flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--focus)]",
-                  active === item.id
-                    ? "bg-[var(--accent-soft)] text-[var(--accent)]"
-                    : "text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]",
-                )}
-                key={item.id}
-                onClick={() => {
-                  setActive(item.id);
-                }}
-                type="button"
-              >
-                <Icon className="size-4" aria-hidden="true" />
-                {item.label}
-              </button>
-            );
-          })}
-        </nav>
+        {/* Empty flexible area doubles as the top bar's draggable body. */}
+        <div className="h-full min-w-0 flex-1" data-tauri-drag-region />
 
-        {/* Empty flexible area doubles as the sidebar's draggable body. */}
-        <div className="min-h-0 flex-1" data-tauri-drag-region />
-
-        <div className="p-2">
+        <div className="relative z-[60] flex items-center gap-3">
+          <SegmentedControl
+            aria-label="平台"
+            items={platformItems}
+            onChange={selectPlatform}
+            value={platform}
+          />
+          <div className="flex items-center gap-1">
+            <Button
+              aria-label="刷新"
+              onClick={() => {
+                void queryClient.invalidateQueries({
+                  queryKey: queryKeys.inventory.all,
+                });
+              }}
+              size="icon"
+              variant="ghost"
+            >
+              <RefreshCw className="size-4" aria-hidden="true" />
+            </Button>
+            <Button
+              aria-label={theme === "dark" ? "切换浅色" : "切换深色"}
+              onClick={toggleTheme}
+              size="icon"
+              variant="ghost"
+            >
+              {theme === "dark"
+                ? <Sun className="size-4" aria-hidden="true" />
+                : <Moon className="size-4" aria-hidden="true" />}
+            </Button>
+            <Button
+              aria-label="设置"
+              onClick={() => {
+                setAppView({ view: "settings" });
+              }}
+              size="icon"
+              variant="ghost"
+            >
+              <Settings className="size-4" aria-hidden="true" />
+            </Button>
+          </div>
           <Button
-            aria-label={theme === "dark" ? "切换浅色" : "切换深色"}
-            onClick={toggleTheme}
-            size="icon"
-            variant="ghost"
+            aria-label="新建 Subagent"
+            onClick={() => {
+              setAppView({ view: "create", importedDraft: null });
+            }}
+            size="iconRound"
+            variant="brand"
           >
-            {theme === "dark"
-              ? <Sun className="size-4" aria-hidden="true" />
-              : <Moon className="size-4" aria-hidden="true" />}
+            <Plus className="size-5" aria-hidden="true" />
           </Button>
         </div>
-      </aside>
+      </header>
 
-      <main className="min-w-0 overflow-auto bg-[var(--background)] p-7">
-        {active === "templates"
+      <main className="min-h-0 flex-1 overflow-auto px-8 pb-10 pt-4">
+        {appView.view === "home"
           ? (
-            <TemplatesPage
-              importedDraft={importedDraft}
-              onConsumeImportedDraft={() => {
-                setImportedDraft(null);
+            <HomePage
+              onImported={(draft) => {
+                setAppView({ view: "create", importedDraft: draft });
               }}
+              platform={platform}
             />
           )
           : null}
-        {active === "installed"
-          ? <InstalledPage onImported={importDraft} />
+        {appView.view === "create"
+          ? (
+            <CreatePage
+              importedDraft={appView.importedDraft}
+              onBack={goHome}
+              onFinished={goHome}
+            />
+          )
           : null}
-        {active === "settings" ? <SettingsPage /> : null}
+        {appView.view === "settings" ? <SettingsPage onBack={goHome} /> : null}
       </main>
     </div>
   );
