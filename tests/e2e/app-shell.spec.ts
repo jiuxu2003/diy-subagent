@@ -23,6 +23,10 @@ test("navigates to the settings sub-page and back home", async ({ page }) => {
   await page.getByRole("button", { name: "设置" }).click();
 
   await expect(page.getByRole("heading", { name: "设置" })).toBeVisible();
+  // Sub-pages collapse the top bar to brand + theme toggle only.
+  await expect(page.getByRole("group", { name: "平台" })).toBeHidden();
+  await expect(page.getByRole("button", { name: "新建 Subagent" }))
+    .toBeHidden();
   const backButton = page.getByRole("button", { name: "返回", exact: true });
   await expect(backButton).toBeVisible();
 
@@ -30,6 +34,8 @@ test("navigates to the settings sub-page and back home", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "设置" })).toBeHidden();
   await expect(page.getByRole("region", { name: "已安装的 subagent" }))
     .toBeVisible();
+  await expect(page.getByRole("group", { name: "平台" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "设置" })).toBeVisible();
 });
 
 test("opens the create page and returns home", async ({ page }) => {
@@ -38,8 +44,18 @@ test("opens the create page and returns home", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: "新建 Subagent" }))
     .toBeVisible();
+  // The top-bar navigation cluster must vanish on the create page so the
+  // gear cannot unmount the editor and discard an in-progress draft.
+  await expect(page.getByRole("group", { name: "平台" })).toBeHidden();
+  await expect(page.getByRole("button", { name: "新建 Subagent" }))
+    .toBeHidden();
+  await expect(page.getByRole("button", { name: "刷新" })).toBeHidden();
+  await expect(page.getByRole("button", { name: "设置" })).toBeHidden();
 
   await page.getByRole("button", { name: "返回", exact: true }).click();
   await expect(page.getByRole("region", { name: "已安装的 subagent" }))
+    .toBeVisible();
+  await expect(page.getByRole("group", { name: "平台" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "新建 Subagent" }))
     .toBeVisible();
 });

@@ -15,14 +15,6 @@ export function useInventory(platforms?: AgentPlatform[]) {
   });
 }
 
-export function useNativeAgentContent(sourceId: string | null) {
-  return useQuery({
-    queryKey: queryKeys.nativeContent(sourceId ?? "none"),
-    queryFn: () => appIpc.getAgentNativeContent(sourceId ?? ""),
-    enabled: sourceId !== null,
-  });
-}
-
 export function useImportAgent() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -53,12 +45,6 @@ export function useCommitAgentInstall() {
         queryKey: queryKeys.inventory.all,
       });
     },
-  });
-}
-
-export function useRevealAgentSource() {
-  return useMutation({
-    mutationFn: (sourceId: string) => appIpc.revealAgentSource(sourceId),
   });
 }
 

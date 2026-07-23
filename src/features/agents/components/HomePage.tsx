@@ -1,5 +1,4 @@
-import * as Dialog from "@radix-ui/react-dialog";
-import { FileCode2, FolderOpen, Import, X } from "lucide-react";
+import { SquarePen } from "lucide-react";
 import { useState } from "react";
 
 import type {
@@ -12,19 +11,21 @@ import { BrandGlyph } from "../../../components/ui/BrandMark";
 import { Pill } from "../../../components/ui/Pill";
 import { errorMessage } from "../../../lib/formatting/error";
 import { platformLabel } from "../../../lib/formatting/platform";
-import {
-  useImportAgent,
-  useInventory,
-  useNativeAgentContent,
-  useRevealAgentSource,
-} from "../hooks/useAgents";
+import { useImportAgent, useInventory } from "../hooks/useAgents";
 import { platformInstallStatuses } from "../lib/platformStatus";
 
-/** Maps a native parse status to its pill tone and user-facing label. */
+/** Only abnormal parse states carry a pill; a healthy card stays clean. */
 const parseStatusPills = {
-  valid: { tone: "success", label: "可导入" },
-  readOnlyUnsupported: { tone: "warning", label: "只读" },
-  invalid: { tone: "danger", label: "解析失败" },
+  readOnlyUnsupported: {
+    tone: "warning",
+    label: "只读",
+    editHint: "该文件为只读格式，暂不能编辑",
+  },
+  invalid: {
+    tone: "danger",
+    label: "解析失败",
+    editHint: "该文件无法解析，暂不能编辑",
+  },
 } as const;
 
 interface HomePageProps {
@@ -35,7 +36,6 @@ interface HomePageProps {
 export function HomePage({ platform, onImported }: HomePageProps) {
   const inventory = useInventory();
   const importAgent = useImportAgent();
-  const reveal = useRevealAgentSource();
   const [actionError, setActionError] = useState<string | null>(null);
 
   const importSource = async (source: DiscoveredAgent) => {
@@ -46,15 +46,6 @@ export function HomePage({ platform, onImported }: HomePageProps) {
         expectedRevision: source.revision,
       });
       onImported(result.draft);
-    } catch (error: unknown) {
-      setActionError(errorMessage(error));
-    }
-  };
-
-  const revealSource = async (sourceId: string) => {
-    setActionError(null);
-    try {
-      await reveal.mutateAsync(sourceId);
     } catch (error: unknown) {
       setActionError(errorMessage(error));
     }
@@ -106,7 +97,6 @@ export function HomePage({ platform, onImported }: HomePageProps) {
                   importPending={importAgent.isPending}
                   key={source.sourceId}
                   onImport={(target) => void importSource(target)}
-                  onReveal={(sourceId) => void revealSource(sourceId)}
                   source={source}
                 />
               ))}
@@ -129,15 +119,17 @@ export function HomePage({ platform, onImported }: HomePageProps) {
 function AgentSourceCard({
   importPending,
   onImport,
-  onReveal,
   source,
 }: {
   importPending: boolean;
   onImport: (source: DiscoveredAgent) => void;
-  onReveal: (sourceId: string) => void;
   source: DiscoveredAgent;
 }) {
-  const statusPill = parseStatusPills[source.parseStatus];
+  // Inline condition so TS narrows the index into parseStatusPills; a null
+  // pill means a healthy, editable source.
+  const statusPill = source.parseStatus === "valid"
+    ? null
+    : parseStatusPills[source.parseStatus];
   return (
     <li className="flex items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4 shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-card-hover)]">
       {/* Monogram tile stands in for a brand icon; decorative because it
@@ -153,9 +145,8 @@ function AgentSourceCard({
           <h2 className="truncate font-mono text-lg font-semibold">
             {source.logicalName}
           </h2>
-          <Pill tone={statusPill.tone}>{statusPill.label}</Pill>
-          {source.ownership === "imported"
-            ? <Pill tone="accent">已导入</Pill>
+          {statusPill
+            ? <Pill tone={statusPill.tone}>{statusPill.label}</Pill>
             : null}
         </div>
         <p className="mt-1 truncate font-mono text-xs text-[var(--text-muted)]">
@@ -169,85 +160,22 @@ function AgentSourceCard({
           )
           : null}
       </div>
-      <div className="flex shrink-0 items-center gap-1.5">
-        <NativeContentDialog source={source} />
+      {/* A disabled Button is pointer-events-none, so the tooltip explaining
+          why editing is unavailable lives on this hoverable wrapper. */}
+      <span className="shrink-0" title={statusPill?.editHint}>
         <Button
-          onClick={() => {
-            onReveal(source.sourceId);
-          }}
-          size="sm"
-          variant="ghost"
-        >
-          <FolderOpen className="size-4" aria-hidden="true" />
-          Finder
-        </Button>
-        <Button
-          disabled={source.parseStatus !== "valid" || importPending}
+          disabled={statusPill !== null || importPending}
           onClick={() => {
             onImport(source);
           }}
           size="sm"
           variant="secondary"
         >
-          <Import className="size-4" aria-hidden="true" />
-          导入并编辑
+          <SquarePen className="size-4" aria-hidden="true" />
+          编辑
         </Button>
-      </div>
+      </span>
     </li>
-  );
-}
-
-function NativeContentDialog({ source }: { source: DiscoveredAgent }) {
-  const [open, setOpen] = useState(false);
-  const content = useNativeAgentContent(open ? source.sourceId : null);
-  return (
-    <Dialog.Root onOpenChange={setOpen} open={open}>
-      <Dialog.Trigger asChild>
-        <Button size="sm" variant="ghost">
-          <FileCode2 className="size-4" aria-hidden="true" />
-          查看文件
-        </Button>
-      </Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/30" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 flex max-h-[82vh] w-[min(860px,82vw)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-2xl outline-none">
-          <div className="flex items-start justify-between gap-4 border-b border-[var(--border)] px-5 py-4">
-            <div className="min-w-0">
-              <Dialog.Title className="truncate font-mono text-lg font-semibold">
-                {source.logicalName}
-              </Dialog.Title>
-              <Dialog.Description className="mt-0.5 break-all font-mono text-xs text-[var(--text-muted)]">
-                {source.pathLabel}
-              </Dialog.Description>
-            </div>
-            <Dialog.Close asChild>
-              <Button aria-label="关闭原生文件" size="icon" variant="ghost">
-                <X className="size-4" aria-hidden="true" />
-              </Button>
-            </Dialog.Close>
-          </div>
-          <div className="min-h-0 flex-1 overflow-auto bg-[var(--code-bg)] p-4">
-            {content.isPending
-              ? (
-                <p className="text-sm text-[var(--text-muted)]">
-                  正在读取磁盘内容…
-                </p>
-              )
-              : content.error
-              ? (
-                <p className="text-sm text-[var(--danger)]">
-                  {errorMessage(content.error)}
-                </p>
-              )
-              : (
-                <pre className="whitespace-pre-wrap break-words text-xs leading-6 text-[var(--code-text)]">
-                {content.data.content}
-                </pre>
-              )}
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
   );
 }
 

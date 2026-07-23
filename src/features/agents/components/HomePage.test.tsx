@@ -20,8 +20,6 @@ import { HomePage } from "./HomePage";
 const ipcMocks = vi.hoisted(() => ({
   scanInstalledAgents: vi.fn(),
   importAgentForEditing: vi.fn(),
-  revealAgentSource: vi.fn(),
-  getAgentNativeContent: vi.fn(),
 }));
 
 vi.mock("../../../lib/ipc/client", async (importOriginal) => {
@@ -47,6 +45,7 @@ function directory(
 function discovered(
   platform: AgentPlatform,
   logicalName: string,
+  overrides: Partial<DiscoveredAgent> = {},
 ): DiscoveredAgent {
   return {
     sourceId: `${platform}-${logicalName}`,
@@ -59,6 +58,7 @@ function discovered(
     ownership: "external",
     errorCode: null,
     compatibilityExposure: false,
+    ...overrides,
   };
 }
 
@@ -76,7 +76,8 @@ const scanWithSources = inventoryScanSchema.parse({
       logicalName: "code-reviewer",
       sources: [
         discovered("claude", "code-reviewer"),
-        discovered("codex", "code-reviewer"),
+        // Imported ownership must NOT surface a pill on the home card.
+        discovered("codex", "code-reviewer", { ownership: "imported" }),
       ],
       hasConflict: false,
     },
@@ -95,6 +96,32 @@ const scanWithClaudeOnly = inventoryScanSchema.parse({
     {
       logicalName: "docs-writer",
       sources: [discovered("claude", "docs-writer")],
+      hasConflict: false,
+    },
+  ],
+});
+
+const scanWithBrokenSources = inventoryScanSchema.parse({
+  inventoryRevision: "rev-3",
+  directories: allDirectories,
+  groups: [
+    {
+      logicalName: "broken-agent",
+      sources: [
+        discovered("codex", "broken-agent", {
+          parseStatus: "invalid",
+          errorCode: "parseError",
+        }),
+      ],
+      hasConflict: false,
+    },
+    {
+      logicalName: "readonly-agent",
+      sources: [
+        discovered("codex", "readonly-agent", {
+          parseStatus: "readOnlyUnsupported",
+        }),
+      ],
       hasConflict: false,
     },
   ],
@@ -131,10 +158,42 @@ describe("HomePage", () => {
     expect(
       await screen.findByRole("heading", { name: "code-reviewer" }),
     ).toBeVisible();
-    expect(screen.getByText("可导入")).toBeVisible();
     expect(screen.getByText("~/.codex/agents/code-reviewer.md")).toBeVisible();
     expect(screen.queryByRole("heading", { name: "docs-writer" }))
       .not.toBeInTheDocument();
+  });
+
+  it("keeps a healthy card clean: no status pill, edit as the only action", async () => {
+    ipcMocks.scanInstalledAgents.mockResolvedValue(scanWithSources);
+
+    renderHomePage("codex");
+
+    expect(await screen.findByRole("button", { name: "编辑" })).toBeEnabled();
+    // valid + imported sources carry no pill; these labels are retired.
+    expect(screen.queryByText("可导入")).not.toBeInTheDocument();
+    expect(screen.queryByText("已导入")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "查看文件" }))
+      .not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Finder" }))
+      .not.toBeInTheDocument();
+  });
+
+  it("pills abnormal parse states and disables editing with a hint", async () => {
+    ipcMocks.scanInstalledAgents.mockResolvedValue(scanWithBrokenSources);
+
+    renderHomePage("codex");
+
+    expect(await screen.findByText("解析失败")).toBeVisible();
+    expect(screen.getByText("只读")).toBeVisible();
+
+    const editButtons = screen.getAllByRole("button", { name: "编辑" });
+    expect(editButtons).toHaveLength(2);
+    for (const button of editButtons) {
+      expect(button).toBeDisabled();
+    }
+    expect(screen.getByTitle("该文件无法解析，暂不能编辑")).toBeInTheDocument();
+    expect(screen.getByTitle("该文件为只读格式，暂不能编辑"))
+      .toBeInTheDocument();
   });
 
   it("shows the not-detected empty state for an undetected platform", async () => {
@@ -165,7 +224,7 @@ describe("HomePage", () => {
     renderHomePage("codex", onImported);
 
     await user.click(
-      await screen.findByRole("button", { name: "导入并编辑" }),
+      await screen.findByRole("button", { name: "编辑" }),
     );
 
     await waitFor(() => {

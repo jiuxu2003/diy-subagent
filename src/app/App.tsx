@@ -39,6 +39,7 @@ export function App() {
   const goHome = () => {
     setAppView({ view: "home" });
   };
+  const isHome = appView.view === "home";
 
   return (
     <div className="flex h-screen flex-col bg-[var(--background)]">
@@ -73,25 +74,36 @@ export function App() {
           <div className="h-full min-w-0 flex-1" data-tauri-drag-region />
 
           <div className="relative z-[60] flex items-center gap-3">
-            <SegmentedControl
-              aria-label="平台"
-              items={platformItems}
-              onChange={selectPlatform}
-              value={platform}
-            />
+            {/* Navigation controls render on home only: from a sub-page the
+                gear or "+" would swap the view and silently discard an
+                in-progress draft. Sub-pages keep just the theme toggle. */}
+            {isHome
+              ? (
+                <SegmentedControl
+                  aria-label="平台"
+                  items={platformItems}
+                  onChange={selectPlatform}
+                  value={platform}
+                />
+              )
+              : null}
             <div className="flex items-center gap-1">
-              <Button
-                aria-label="刷新"
-                onClick={() => {
-                  void queryClient.invalidateQueries({
-                    queryKey: queryKeys.inventory.all,
-                  });
-                }}
-                size="icon"
-                variant="ghost"
-              >
-                <RefreshCw className="size-4" aria-hidden="true" />
-              </Button>
+              {isHome
+                ? (
+                  <Button
+                    aria-label="刷新"
+                    onClick={() => {
+                      void queryClient.invalidateQueries({
+                        queryKey: queryKeys.inventory.all,
+                      });
+                    }}
+                    size="icon"
+                    variant="ghost"
+                  >
+                    <RefreshCw className="size-4" aria-hidden="true" />
+                  </Button>
+                )
+                : null}
               <Button
                 aria-label={theme === "dark" ? "切换浅色" : "切换深色"}
                 onClick={toggleTheme}
@@ -102,27 +114,35 @@ export function App() {
                   ? <Sun className="size-4" aria-hidden="true" />
                   : <Moon className="size-4" aria-hidden="true" />}
               </Button>
-              <Button
-                aria-label="设置"
-                onClick={() => {
-                  setAppView({ view: "settings" });
-                }}
-                size="icon"
-                variant="ghost"
-              >
-                <Settings className="size-4" aria-hidden="true" />
-              </Button>
+              {isHome
+                ? (
+                  <Button
+                    aria-label="设置"
+                    onClick={() => {
+                      setAppView({ view: "settings" });
+                    }}
+                    size="icon"
+                    variant="ghost"
+                  >
+                    <Settings className="size-4" aria-hidden="true" />
+                  </Button>
+                )
+                : null}
             </div>
-            <Button
-              aria-label="新建 Subagent"
-              onClick={() => {
-                setAppView({ view: "create", importedDraft: null });
-              }}
-              size="iconRound"
-              variant="brand"
-            >
-              <Plus className="size-5" aria-hidden="true" />
-            </Button>
+            {isHome
+              ? (
+                <Button
+                  aria-label="新建 Subagent"
+                  onClick={() => {
+                    setAppView({ view: "create", importedDraft: null });
+                  }}
+                  size="iconRound"
+                  variant="brand"
+                >
+                  <Plus className="size-5" aria-hidden="true" />
+                </Button>
+              )
+              : null}
           </div>
         </div>
       </header>
