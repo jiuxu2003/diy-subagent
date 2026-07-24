@@ -11,3 +11,7 @@
 3. 选模型的下拉表我觉得现在有点丑,能不能学学cc-switch那个表单
 4. 现在新增模型的名称, 描述挤在一行,感觉特别不整齐,要不然各自都独占一行吧
 5. 现在我把diy-subagent切到新增自定义模型页面,然后前台切到另一个app再切回diy-subagent的时候就会白屏然后退回到首页,这是pnpm tauri:dev的原因吗?正式版release会不会有这个情况
+
+
+
+![alt text](image-2.png)前端有点问题,怎么model和model_reasoning_effort,sandbox_mode不在一行了,而且这部分能改成我先前说的中文吗
