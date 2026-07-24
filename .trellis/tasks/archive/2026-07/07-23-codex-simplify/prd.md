@@ -57,15 +57,15 @@
 
 ## Acceptance Criteria
 
-- [ ] 模板选择区仅显示「自定义」+ 6 个官方示例模板；旧 6 个模板不再出现。
-- [ ] 选择 docs_researcher 并安装到 Codex 后，`~/.codex/agents/docs_researcher.toml` 包含 name / description / model / model_reasoning_effort / sandbox_mode / developer_instructions 及 `[mcp_servers.openaiDeveloperDocs]`。
-- [ ] 新建页主表单只有 名称 / 描述 / 遵循指令 三个输入项；「共享语义章节」「语言与使用契约」不再渲染。
-- [ ] 空白起点新建时：三个输入默认为空，Codex 高级区思考强度显示 medium、沙盒模式显示 read-only。
-- [ ] 思考强度下拉档位与研究确认的官方口径一致；沙盒模式与遵循指令旁问号悬停出现中文说明。
-- [ ] Codex 高级区 model 可从拉取的模型列表中选择；断网 / 无 key 时可手动输入；应用重启后列表来自缓存；刷新按钮可强制重拉。
-- [ ] 手写的无标记 codex TOML（含 `[mcp_servers.*]`）导入后可编辑，保存回写不丢未知表。
-- [ ] `pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm test:e2e` 与 `cargo fmt --check`、`cargo clippy -D warnings`、`cargo test` 全部通过。
-- [ ] 冒烟反馈（2026-07-24）：model 输入框可弹出真实下拉面板（WKWebView 下可见、点选回填、样式贴 CC-Switch）；思考强度选项随所选模型过滤（GPT 系列映射，max/ultra 仅 gpt-5.6 家族显示）；名称与描述各占一行；「切走再切回白屏退回首页」在 release 包中不复现（或已修复）。
+- [x] 模板选择区仅显示「自定义」+ 6 个官方示例模板；旧 6 个模板不再出现。
+- [x] 选择 docs_researcher 并安装到 Codex 后，`~/.codex/agents/docs_researcher.toml` 包含 name / description / model / model_reasoning_effort / sandbox_mode / developer_instructions 及 `[mcp_servers.openaiDeveloperDocs]`。
+- [x] 新建页主表单只有 名称 / 描述 / 遵循指令 三个输入项；「共享语义章节」「语言与使用契约」不再渲染。
+- [x] 空白起点新建时：三个输入默认为空，Codex 高级区思考强度显示 medium、沙盒模式显示 read-only。
+- [x] 思考强度下拉档位与研究确认的官方口径一致；沙盒模式与遵循指令旁问号悬停出现中文说明。
+- [x] Codex 高级区 model 可从拉取的模型列表中选择；断网 / 无 key 时可手动输入；应用重启后列表来自缓存；刷新按钮可强制重拉。
+- [x] 手写的无标记 codex TOML（含 `[mcp_servers.*]`）导入后可编辑，保存回写不丢未知表。
+- [x] `pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm test:e2e` 与 `cargo fmt --check`、`cargo clippy -D warnings`、`cargo test` 全部通过。
+- [x] 冒烟反馈（2026-07-24）：model 输入框可弹出真实下拉面板（WKWebView 下可见、点选回填、样式贴 CC-Switch）；思考强度选项随所选模型过滤（GPT 系列映射，max/ultra 仅 gpt-5.6 家族显示）；名称与描述各占一行；「切走再切回白屏退回首页」在 release 包中不复现（或已修复）。
 
 ## Notes
 
