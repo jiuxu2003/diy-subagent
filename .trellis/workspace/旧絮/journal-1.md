@@ -207,3 +207,38 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 6: Codex 侧简化：官方模板重做 + 三字段低门槛配置页 + 模型目录链路
+
+**Date**: 2026-07-24
+**Task**: Codex 侧简化：官方模板重做 + 三字段低门槛配置页 + 模型目录链路
+**Branch**: `feat/codex-subagent`
+
+### Summary
+
+AgentDraft 收敛为 name/description/developer_instructions 并删除结构化指令契约与 marker 只读判定（无标记 codex TOML 导入即可编辑）；内置模板重做为空白起点 + 官方文档六示例（extraToml 载体完整还原 mcp_servers/skills.config）；新增 list_codex_models 链路（~/.codex 配置解析、reqwest 拉取 /v1/models、app_data_dir 文件缓存、失败降级手输）；编辑器三字段主表单 + 问号说明，codex 高级区 cc-switch 式模型下拉面板（datalist 在 WKWebView 不渲染的返工教训）、effort 按 GPT 系列静态映射过滤、标签中文化对齐；spec 新增 backend/agent-contract 与 backend/model-catalog；dev 模式切走白屏定性为 Vite ws 重连整页 reload，release 包不复现。
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `cc363bc` | (see git log) |
+| `7587c45` | (see git log) |
+| `f5d70b2` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
