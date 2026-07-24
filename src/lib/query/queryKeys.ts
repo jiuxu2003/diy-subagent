@@ -6,6 +6,7 @@ export const queryKeys = {
     detail: (templateId: string) => ["templates", templateId] as const,
   },
   directories: ["platform-directories"] as const,
+  codexModels: ["codex-models"] as const,
   inventory: {
     all: ["inventory"] as const,
     platforms: (platforms?: AgentPlatform[]) =>

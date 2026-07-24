@@ -6,7 +6,7 @@ use crate::{
         SourceRevision, TargetSelection, ValidationIssue, WritePlanToken,
     },
     error::{AppError, RecoveryAction},
-    services::{ImportAgentResult, InventoryScan, NativeAgentContent},
+    services::{ImportAgentResult, InventoryScan, ModelList, NativeAgentContent},
 };
 
 #[derive(Debug, Clone, Serialize)]
@@ -88,6 +88,32 @@ pub struct CommitAgentInstallRequestDto {
     pub write_plan_token: WritePlanToken,
 }
 
+#[derive(Debug, Clone, Copy, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct ListCodexModelsRequestDto {
+    pub force_refresh: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CodexModelListDto {
+    pub base_url: String,
+    pub models: Vec<String>,
+    pub fetched_at_ms: i64,
+    pub from_cache: bool,
+}
+
+impl From<ModelList> for CodexModelListDto {
+    fn from(value: ModelList) -> Self {
+        Self {
+            base_url: value.base_url,
+            models: value.models,
+            fetched_at_ms: value.fetched_at_ms,
+            from_cache: value.from_cache,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InventoryScanDto {
@@ -159,10 +185,7 @@ mod tests {
     use std::collections::BTreeMap;
 
     use super::*;
-    use crate::domain::agents::{
-        ClaudeOverride, DraftProvenance, PlatformOverride, ResponseLanguage,
-        SharedInstructionContract, UsageContract,
-    };
+    use crate::domain::agents::{ClaudeOverride, DraftProvenance, PlatformOverride};
 
     #[test]
     fn import_agent_result_matches_the_shared_frontend_fixture() {
@@ -170,23 +193,9 @@ mod tests {
             draft: AgentDraft {
                 logical_name: "imported-agent".to_owned(),
                 description: "Imported native agent.".to_owned(),
-                shared: SharedInstructionContract {
-                    role_goal: "Inspect the requested work.".to_owned(),
-                    when_to_use: vec!["The task needs focused analysis.".to_owned()],
-                    when_not_to_use: vec!["The task is already complete.".to_owned()],
-                    input_requirements: vec!["The original request.".to_owned()],
-                    execution_steps: vec!["Inspect the evidence.".to_owned()],
-                    output_contract: "Return a verifiable result.".to_owned(),
-                    constraints: vec!["Do not invent evidence.".to_owned()],
-                    stop_conditions: vec!["The result is verified.".to_owned()],
-                    failure_handling: "Report the missing evidence.".to_owned(),
-                },
-                response_language: ResponseLanguage::FollowUser,
-                usage: UsageContract {
-                    explicit_invocation_examples: vec!["Inspect this task.".to_owned()],
-                    auto_delegation_guidance: "Use for focused analysis.".to_owned(),
-                    verification_task: "Verify the result against the source.".to_owned(),
-                },
+                developer_instructions:
+                    "Inspect the requested work.\nReturn a verifiable result and report missing evidence."
+                        .to_owned(),
                 platform_overrides: BTreeMap::from([(
                     AgentPlatform::Claude,
                     PlatformOverride::Claude(ClaudeOverride::default()),
@@ -250,5 +259,35 @@ mod tests {
                 "recoveryId": "operation-id"
             })
         );
+    }
+
+    #[test]
+    fn codex_model_list_dto_serializes_with_camel_case_keys() {
+        let dto = CodexModelListDto {
+            base_url: "https://api.openai.com/v1".to_owned(),
+            models: vec!["gpt-5.4".to_owned(), "gpt-5.4-mini".to_owned()],
+            fetched_at_ms: 1_234_000,
+            from_cache: true,
+        };
+        let serialized = serde_json::to_value(dto).expect("model list DTO serializes");
+
+        assert_eq!(
+            serialized,
+            serde_json::json!({
+                "baseUrl": "https://api.openai.com/v1",
+                "models": ["gpt-5.4", "gpt-5.4-mini"],
+                "fetchedAtMs": 1_234_000,
+                "fromCache": true
+            })
+        );
+    }
+
+    #[test]
+    fn list_codex_models_request_accepts_camel_case_keys() {
+        let request: ListCodexModelsRequestDto =
+            serde_json::from_value(serde_json::json!({ "forceRefresh": true }))
+                .expect("request DTO deserializes");
+
+        assert!(request.force_refresh);
     }
 }

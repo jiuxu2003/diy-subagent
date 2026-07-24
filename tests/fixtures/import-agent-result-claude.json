@@ -2,23 +2,7 @@
   "draft": {
     "logicalName": "imported-agent",
     "description": "Imported native agent.",
-    "shared": {
-      "roleGoal": "Inspect the requested work.",
-      "whenToUse": ["The task needs focused analysis."],
-      "whenNotToUse": ["The task is already complete."],
-      "inputRequirements": ["The original request."],
-      "executionSteps": ["Inspect the evidence."],
-      "outputContract": "Return a verifiable result.",
-      "constraints": ["Do not invent evidence."],
-      "stopConditions": ["The result is verified."],
-      "failureHandling": "Report the missing evidence."
-    },
-    "responseLanguage": "followUser",
-    "usage": {
-      "explicitInvocationExamples": ["Inspect this task."],
-      "autoDelegationGuidance": "Use for focused analysis.",
-      "verificationTask": "Verify the result against the source."
-    },
+    "developerInstructions": "Inspect the requested work.\nReturn a verifiable result and report missing evidence.",
     "platformOverrides": {
       "claude": {
         "platform": "claude",

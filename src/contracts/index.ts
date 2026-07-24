@@ -3,30 +3,6 @@ import { z } from "zod";
 export const agentPlatformSchema = z.enum(["claude", "codex", "cursor"]);
 export type AgentPlatform = z.infer<typeof agentPlatformSchema>;
 
-export const responseLanguageSchema = z.enum([
-  "followUser",
-  "simplifiedChinese",
-  "english",
-]);
-
-export const sharedInstructionContractSchema = z.object({
-  roleGoal: z.string(),
-  whenToUse: z.array(z.string()),
-  whenNotToUse: z.array(z.string()),
-  inputRequirements: z.array(z.string()),
-  executionSteps: z.array(z.string()),
-  outputContract: z.string(),
-  constraints: z.array(z.string()),
-  stopConditions: z.array(z.string()),
-  failureHandling: z.string(),
-});
-
-export const usageContractSchema = z.object({
-  explicitInvocationExamples: z.array(z.string()),
-  autoDelegationGuidance: z.string(),
-  verificationTask: z.string(),
-});
-
 const claudeOverrideSchema = z.object({
   model: z.string().nullable().optional(),
   effort: z.string().nullable().optional(),
@@ -45,6 +21,8 @@ const codexOverrideSchema = z.object({
   modelReasoningEffort: z.string().nullable().optional(),
   sandboxMode: z.string().nullable().optional(),
   nicknameCandidates: z.array(z.string()).default([]),
+  /** Extra native TOML tables (e.g. mcp_servers) merged in by the backend. */
+  extraToml: z.string().nullable().optional(),
 });
 
 const cursorOverrideSchema = z.object({
@@ -85,9 +63,7 @@ export const draftProvenanceSchema = z.discriminatedUnion("kind", [
 export const agentDraftSchema = z.object({
   logicalName: z.string(),
   description: z.string(),
-  shared: sharedInstructionContractSchema,
-  responseLanguage: responseLanguageSchema,
-  usage: usageContractSchema,
+  developerInstructions: z.string(),
   platformOverrides: z.partialRecord(
     agentPlatformSchema,
     platformOverrideSchema,
@@ -123,19 +99,28 @@ export const templatePackageSchema = z.object({
     tags: z.array(z.string()),
     supportedPlatforms: z.array(agentPlatformSchema),
     risk: templateRiskSchema,
-    adapterContracts: z.record(agentPlatformSchema, z.string()),
+    // Codex-only templates declare a single adapter contract, so the enum
+    // keys stay partial instead of exhaustive.
+    adapterContracts: z.partialRecord(agentPlatformSchema, z.string()),
   }),
   logicalName: z.string(),
   defaultDescription: z.string(),
-  sharedDefaults: sharedInstructionContractSchema,
-  usageDefaults: usageContractSchema,
-  responseLanguage: responseLanguageSchema,
+  developerInstructions: z.string(),
   platformOverrides: z.partialRecord(
     agentPlatformSchema,
     platformOverrideSchema,
   ),
 });
 export type TemplatePackage = z.infer<typeof templatePackageSchema>;
+
+/** Model catalog fetched by the backend from the Codex provider endpoint. */
+export const codexModelListSchema = z.object({
+  baseUrl: z.string(),
+  models: z.array(z.string()),
+  fetchedAtMs: z.number().int(),
+  fromCache: z.boolean(),
+});
+export type CodexModelList = z.infer<typeof codexModelListSchema>;
 
 export const savePersonalTemplateRequestSchema = z.object({
   name: z.string().trim().min(1),

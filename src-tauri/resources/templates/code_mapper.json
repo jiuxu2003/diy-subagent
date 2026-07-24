@@ -1,0 +1,29 @@
+{
+  "manifest": {
+    "id": "code_mapper",
+    "version": "1.0.0",
+    "name": "代码地图师",
+    "description": "只读定位前后端相关代码路径的探索者。",
+    "author": "OpenAI Codex 官方文档示例",
+    "source": "builtin",
+    "tags": ["代码探索", "调试"],
+    "supportedPlatforms": ["codex"],
+    "risk": { "level": "low", "summary": "只读沙盒运行，不修改工作区文件。" },
+    "adapterContracts": {
+      "codex": "codex-custom-agent-2026-07"
+    }
+  },
+  "logicalName": "code_mapper",
+  "defaultDescription": "Read-only codebase explorer for locating the relevant frontend and backend code paths.",
+  "developerInstructions": "Map the code that owns the failing UI flow.\nIdentify entry points, state transitions, and likely files before the worker starts editing.\n",
+  "platformOverrides": {
+    "codex": {
+      "platform": "codex",
+      "config": {
+        "model": "gpt-5.4-mini",
+        "modelReasoningEffort": "medium",
+        "sandboxMode": "read-only"
+      }
+    }
+  }
+}

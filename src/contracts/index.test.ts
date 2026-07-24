@@ -2,25 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import importAgentResultFixture from "../../tests/fixtures/import-agent-result-claude.json?raw";
 import platformDirectoryFixture from "../../tests/fixtures/platform-directory-claude.json?raw";
-import { importAgentResultSchema, platformDirectorySchema } from "./index";
-
-const shared = {
-  roleGoal: "Inspect the requested work.",
-  whenToUse: ["The task needs focused analysis."],
-  whenNotToUse: ["The task is already complete."],
-  inputRequirements: ["The original request."],
-  executionSteps: ["Inspect the evidence."],
-  outputContract: "Return a verifiable result.",
-  constraints: ["Do not invent evidence."],
-  stopConditions: ["The result is verified."],
-  failureHandling: "Report the missing evidence.",
-};
-
-const usage = {
-  explicitInvocationExamples: ["Inspect this task."],
-  autoDelegationGuidance: "Use for focused analysis.",
-  verificationTask: "Verify the result against the source.",
-};
+import {
+  codexModelListSchema,
+  importAgentResultSchema,
+  platformDirectorySchema,
+} from "./index";
 
 const importedFixtures = [
   {
@@ -55,6 +41,9 @@ describe("importAgentResultSchema", () => {
 
     const parsed = importAgentResultSchema.parse(fixture);
 
+    expect(parsed.draft.developerInstructions).toContain(
+      "Inspect the requested work.",
+    );
     expect(parsed.draft.provenance).toEqual({
       kind: "imported",
       sourceId: "source-id",
@@ -69,9 +58,7 @@ describe("importAgentResultSchema", () => {
         draft: {
           logicalName: "imported-agent",
           description: "Imported native agent.",
-          shared,
-          responseLanguage: "followUser",
-          usage,
+          developerInstructions: "Inspect the requested work.",
           platformOverrides: fixture.platformOverrides,
           provenance: {
             kind: "imported",
@@ -94,6 +81,30 @@ describe("importAgentResultSchema", () => {
       }
     });
   }
+});
+
+describe("codexModelListSchema", () => {
+  it("accepts a model catalog payload", () => {
+    const parsed = codexModelListSchema.parse({
+      baseUrl: "https://api.openai.com/v1",
+      models: ["gpt-5.4", "gpt-5.6-sol"],
+      fetchedAtMs: 1_753_000_000_000,
+      fromCache: true,
+    });
+
+    expect(parsed.models).toEqual(["gpt-5.4", "gpt-5.6-sol"]);
+    expect(parsed.fromCache).toBe(true);
+  });
+
+  it("rejects a payload without a models array", () => {
+    const parsed = codexModelListSchema.safeParse({
+      baseUrl: "https://api.openai.com/v1",
+      fetchedAtMs: 0,
+      fromCache: false,
+    });
+
+    expect(parsed.success).toBe(false);
+  });
 });
 
 describe("platformDirectorySchema", () => {

@@ -16,12 +16,14 @@ use crate::{
     domain::ports::{Clock, SystemClock},
     error::{AppError, AppErrorKind},
     infrastructure::{
-        database::Database, inventory_watcher::InventoryWatcher, paths::PlatformPathResolver,
+        database::Database, inventory_watcher::InventoryWatcher,
+        model_fetcher::HttpModelListFetcher, paths::PlatformPathResolver,
         source_registry::SourceRegistry, templates::TemplateRepository,
         transaction::BatchTransactionCoordinator, write_plan_store::WritePlanStore,
     },
     services::{
-        AgentApplicationService, AgentServiceDependencies, SettingsService, TemplateService,
+        AgentApplicationService, AgentServiceDependencies, ModelCatalogService, SettingsService,
+        TemplateService,
     },
 };
 
@@ -29,6 +31,7 @@ pub struct AppState {
     settings: SettingsService,
     templates: TemplateService,
     agents: AgentApplicationService,
+    model_catalog: ModelCatalogService,
     inventory_watcher: Arc<InventoryWatcher>,
 }
 
@@ -96,11 +99,18 @@ impl AppState {
             agents.clone(),
             paths.clone(),
         ));
+        let model_catalog = ModelCatalogService::new(
+            Arc::new(HttpModelListFetcher),
+            clock.clone(),
+            paths.home_dir().to_path_buf(),
+            app_data_dir,
+        );
 
         Ok(Self {
             settings: SettingsService::new(paths.clone(), write_plans.clone()),
             templates: TemplateService::new(templates, adapters.clone()),
             agents,
+            model_catalog,
             inventory_watcher,
         })
     }
@@ -134,6 +144,7 @@ pub fn run() {
             commands::import_agent_for_editing,
             commands::preview_agent_install,
             commands::commit_agent_install,
+            commands::list_codex_models,
             commands::reveal_agent_source,
             commands::reveal_recovery_directory,
         ])

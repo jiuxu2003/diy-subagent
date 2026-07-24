@@ -5,9 +5,8 @@ use serde_yaml_ng::{Mapping, Number, Value};
 use crate::{
     domain::{
         agents::{
-            render_structured_instructions, AgentDraft, AgentPlatform, CapabilityDisposition,
-            CapabilityIssue, ClaudeOverride, CursorOverride, DraftProvenance, NativeFormat,
-            PlatformOverride, ResponseLanguage, SharedInstructionContract, UsageContract,
+            AgentDraft, AgentPlatform, CapabilityDisposition, CapabilityIssue, ClaudeOverride,
+            CursorOverride, DraftProvenance, NativeFormat, PlatformOverride,
         },
         ports::{ParsedNativeAgent, RenderedNativeAgent},
     },
@@ -59,29 +58,11 @@ pub fn parse_markdown_agent(
 
     let name = required_string(&mapping, "name", flavor.platform())?;
     let description = required_string(&mapping, "description", flavor.platform())?;
-    let structured = crate::domain::agents::parse_structured_instructions(body);
-    let editable = structured.is_some() && !has_unsafe_yaml_round_trip_features(frontmatter);
-    let (shared, response_language, usage) = structured.unwrap_or_else(|| {
-        (
-            SharedInstructionContract {
-                role_goal: body.trim().to_owned(),
-                when_to_use: Vec::new(),
-                when_not_to_use: Vec::new(),
-                input_requirements: Vec::new(),
-                execution_steps: Vec::new(),
-                output_contract: String::new(),
-                constraints: Vec::new(),
-                stop_conditions: Vec::new(),
-                failure_handling: String::new(),
-            },
-            ResponseLanguage::FollowUser,
-            UsageContract {
-                explicit_invocation_examples: Vec::new(),
-                auto_delegation_guidance: String::new(),
-                verification_task: String::new(),
-            },
-        )
-    });
+    // The Markdown body maps verbatim to the draft instructions. Editability
+    // only depends on whether the YAML frontmatter can round-trip losslessly;
+    // comments, anchors, aliases, and tags would be destroyed on re-render.
+    let editable = !has_unsafe_yaml_round_trip_features(frontmatter);
+    let developer_instructions = body.trim().to_owned();
 
     let mut overrides = BTreeMap::new();
     match flavor {
@@ -103,9 +84,7 @@ pub fn parse_markdown_agent(
         draft: AgentDraft {
             logical_name: name,
             description,
-            shared,
-            response_language,
-            usage,
+            developer_instructions,
             platform_overrides: overrides,
             provenance: DraftProvenance::NativeSource {
                 platform: flavor.platform(),
@@ -113,7 +92,7 @@ pub fn parse_markdown_agent(
         },
         editable,
         blocked_reason: (!editable).then(|| {
-            "该文件不是 DIY Subagent 结构化格式，或包含无法证明无损的 YAML 特性；可只读查看，但不能在应用内覆盖。"
+            "该文件的 YAML 包含注释、anchor、alias 或 tag，应用无法证明无损覆盖；可只读查看，但不能在应用内修改。"
                 .to_owned()
         }),
         preserved_fields: preserved_fields(&mapping, known_fields(flavor)),
@@ -166,7 +145,7 @@ pub fn render_markdown_agent(
             render_cursor_override(&mut mapping, draft);
             vec![CapabilityIssue {
                 id: "cursor.prompt-only-contract".to_owned(),
-                field: "shared.constraints".to_owned(),
+                field: "developerInstructions".to_owned(),
                 platform: AgentPlatform::Cursor,
                 disposition: CapabilityDisposition::PromptOnly,
                 explanation:
@@ -179,8 +158,8 @@ pub fn render_markdown_agent(
     let yaml = serde_yaml_ng::to_string(&mapping).map_err(|source| {
         AppError::new(AppErrorKind::Internal, "无法渲染 YAML frontmatter。").with_source(source)
     })?;
-    let body = render_structured_instructions(draft);
-    let native = format!("---\n{}\n---\n{}", yaml.trim_end(), body);
+    let body = draft.developer_instructions.trim();
+    let native = format!("---\n{}\n---\n{}\n", yaml.trim_end(), body);
 
     Ok(RenderedNativeAgent {
         file_name: format!("{}.md", draft.logical_name),
@@ -437,6 +416,9 @@ fn insert_string_list(mapping: &mut Mapping, field: &str, values: &[String]) {
 mod tests {
     use super::*;
 
+    const SAMPLE_BODY: &str =
+        "Inspect the requested work.\nReturn a verifiable result and report missing evidence.";
+
     fn sample_draft(flavor: MarkdownFlavor) -> AgentDraft {
         let platform = flavor.platform();
         let platform_override = match flavor {
@@ -446,38 +428,36 @@ mod tests {
         AgentDraft {
             logical_name: "round-trip-agent".to_owned(),
             description: "Preserve native fields.".to_owned(),
-            shared: SharedInstructionContract {
-                role_goal: "Inspect the requested work.".to_owned(),
-                when_to_use: vec!["The task needs focused analysis.".to_owned()],
-                when_not_to_use: vec!["The task is already complete.".to_owned()],
-                input_requirements: vec!["The original request.".to_owned()],
-                execution_steps: vec!["Inspect the evidence.".to_owned()],
-                output_contract: "Return a verifiable result.".to_owned(),
-                constraints: vec!["Do not invent evidence.".to_owned()],
-                stop_conditions: vec!["The result is verified.".to_owned()],
-                failure_handling: "Report missing evidence.".to_owned(),
-            },
-            response_language: ResponseLanguage::FollowUser,
-            usage: UsageContract {
-                explicit_invocation_examples: vec!["Inspect this task.".to_owned()],
-                auto_delegation_guidance: "Use for focused analysis.".to_owned(),
-                verification_task: "Verify the result against the source.".to_owned(),
-            },
+            developer_instructions: SAMPLE_BODY.to_owned(),
             platform_overrides: BTreeMap::from([(platform, platform_override)]),
             provenance: DraftProvenance::NativeSource { platform },
         }
     }
 
     #[test]
-    fn preserves_unknown_yaml_fields_for_claude_and_cursor() {
+    fn body_round_trips_verbatim_as_developer_instructions() {
         for flavor in [MarkdownFlavor::Claude, MarkdownFlavor::Cursor] {
             let draft = sample_draft(flavor);
-            let body = render_structured_instructions(&draft);
+            let rendered =
+                render_markdown_agent(flavor, &draft, None).expect("native agent renders");
+            let parsed = parse_markdown_agent(flavor, &rendered.bytes, "agent.md")
+                .expect("rendered agent parses");
+
+            assert!(parsed.editable);
+            assert_eq!(parsed.blocked_reason, None);
+            assert_eq!(parsed.draft.developer_instructions, SAMPLE_BODY);
+            assert_eq!(parsed.draft.logical_name, draft.logical_name);
+        }
+    }
+
+    #[test]
+    fn preserves_unknown_yaml_fields_for_claude_and_cursor() {
+        for flavor in [MarkdownFlavor::Claude, MarkdownFlavor::Cursor] {
             let original = format!(
-                "---\nname: round-trip-agent\ndescription: Preserve native fields.\nunknown_scalar: keep-me\nunknown_nested:\n  enabled: true\n---\n{body}"
+                "---\nname: round-trip-agent\ndescription: Preserve native fields.\nunknown_scalar: keep-me\nunknown_nested:\n  enabled: true\n---\n{SAMPLE_BODY}\n"
             );
             let parsed = parse_markdown_agent(flavor, original.as_bytes(), "agent.md")
-                .expect("structured native agent parses");
+                .expect("native agent parses");
             assert!(parsed.editable);
             assert_eq!(
                 parsed.preserved_fields,
@@ -487,7 +467,8 @@ mod tests {
             let rendered = render_markdown_agent(flavor, &parsed.draft, Some(original.as_bytes()))
                 .expect("native agent rerenders");
             let rendered_text = std::str::from_utf8(&rendered.bytes).expect("render is UTF-8");
-            let (frontmatter, _) = split_frontmatter(rendered_text).expect("frontmatter splits");
+            let (frontmatter, body) = split_frontmatter(rendered_text).expect("frontmatter splits");
+            assert_eq!(body.trim(), SAMPLE_BODY);
             let mapping: Mapping =
                 serde_yaml_ng::from_str(frontmatter).expect("rendered YAML parses");
             assert_eq!(
@@ -508,9 +489,20 @@ mod tests {
     }
 
     #[test]
+    fn unsafe_yaml_features_mark_the_agent_read_only() {
+        let original = format!(
+            "---\nname: round-trip-agent\ndescription: Preserve native fields.\nunknown: value # inline comment\n---\n{SAMPLE_BODY}\n"
+        );
+        let parsed = parse_markdown_agent(MarkdownFlavor::Claude, original.as_bytes(), "agent.md")
+            .expect("native agent parses");
+
+        assert!(!parsed.editable);
+        assert!(parsed.blocked_reason.is_some());
+    }
+
+    #[test]
     fn blocks_yaml_features_that_cannot_be_preserved_losslessly() {
         let draft = sample_draft(MarkdownFlavor::Claude);
-        let body = render_structured_instructions(&draft);
         for unsafe_field in [
             "unknown: value # inline comment",
             "unknown: &shared value",
@@ -518,7 +510,7 @@ mod tests {
             "unknown: !custom value",
         ] {
             let original = format!(
-                "---\nname: round-trip-agent\ndescription: Preserve native fields.\n{unsafe_field}\n---\n{body}"
+                "---\nname: round-trip-agent\ndescription: Preserve native fields.\n{unsafe_field}\n---\n{SAMPLE_BODY}\n"
             );
             let error =
                 render_markdown_agent(MarkdownFlavor::Claude, &draft, Some(original.as_bytes()))

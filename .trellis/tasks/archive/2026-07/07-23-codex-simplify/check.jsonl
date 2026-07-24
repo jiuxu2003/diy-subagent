@@ -1,0 +1,5 @@
+{"file": ".trellis/tasks/07-23-codex-simplify/research/codebase.md", "reason": "受影响测试全清单（Vitest 12 文件 + cargo 14 处 + e2e）与双边 fixture 锁定点，质检按此覆盖"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "后端质量门标准"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "前端质量门标准（lint --max-warnings=0）"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "跨层数据流一致性检查（Rust DTO ⇄ zod ⇄ fixtures）"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "复用检查：write_atomic/Clock 端口模式/FieldShell hint 等既有设施是否被复用而非重造"}

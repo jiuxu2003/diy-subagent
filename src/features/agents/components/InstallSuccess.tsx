@@ -77,18 +77,6 @@ export function InstallSuccess(
         </div>
       </section>
 
-      <section className="space-y-3">
-        <h3 className="border-b border-[var(--border)] pb-2 text-sm font-semibold">
-          验证任务
-        </h3>
-        <p className="text-sm leading-6 text-[var(--text-muted)]">
-          {draft.usage.verificationTask}
-        </p>
-        <p className="text-xs text-[var(--text-muted)]">
-          自动委派时机：{draft.usage.autoDelegationGuidance}
-        </p>
-      </section>
-
       <div className="flex justify-end">
         <Button onClick={onBackHome} variant="secondary">
           返回首页

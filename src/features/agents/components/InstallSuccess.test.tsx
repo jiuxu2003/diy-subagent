@@ -8,23 +8,8 @@ import { InstallSuccess } from "./InstallSuccess";
 const draft: AgentDraft = {
   logicalName: "test-agent",
   description: "Use this agent for focused analysis.",
-  shared: {
-    roleGoal: "Inspect the requested work.",
-    whenToUse: ["The task needs focused analysis."],
-    whenNotToUse: ["The task is already complete."],
-    inputRequirements: ["The original request."],
-    executionSteps: ["Inspect the evidence."],
-    outputContract: "Return a verifiable result.",
-    constraints: ["Do not invent evidence."],
-    stopConditions: ["The result is verified."],
-    failureHandling: "Report missing evidence.",
-  },
-  responseLanguage: "followUser",
-  usage: {
-    explicitInvocationExamples: ["Inspect this task."],
-    autoDelegationGuidance: "Use for focused analysis.",
-    verificationTask: "Verify the result against the source.",
-  },
+  developerInstructions:
+    "Inspect the requested work and report verifiable evidence.",
   platformOverrides: {
     claude: {
       platform: "claude",
@@ -70,6 +55,12 @@ afterEach(() => {
 });
 
 describe("InstallSuccess", () => {
+  it("no longer renders the removed verification-task section", () => {
+    renderSuccess();
+
+    expect(screen.queryByText("验证任务")).not.toBeInTheDocument();
+  });
+
   it("copies the invocation text and announces 已复制", async () => {
     const user = userEvent.setup();
     renderSuccess();

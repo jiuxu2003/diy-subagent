@@ -728,10 +728,9 @@ mod tests {
         conflict_action: ConflictAction,
         expected_revision: Option<SourceRevision>,
     ) -> StoredTargetPlan {
-        let package: TemplatePackage = serde_json::from_str(include_str!(
-            "../../resources/templates/requirements-clarifier.json"
-        ))
-        .expect("built-in template fixture parses");
+        let package: TemplatePackage =
+            serde_json::from_str(include_str!("../../resources/templates/pr_explorer.json"))
+                .expect("built-in template fixture parses");
         let rendered = coordinator
             .adapters
             .get(platform)

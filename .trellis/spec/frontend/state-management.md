@@ -85,6 +85,14 @@ independent booleans such as `isLoading`, `isPreviewing`, `hasConflict`, and
 - Mutations display the committed backend result rather than reconstructing it
   from the submitted draft.
 
+> **Convention (2026-07)**: when durable caching lives in Rust (e.g. the codex
+> model catalog persisted under `app_data_dir`), the matching query uses
+> `staleTime: Infinity` — the frontend never re-fetches on its own. A manual
+> refresh is a mutation calling the same IPC with `forceRefresh: true` that
+> writes its result back via `setQueryData`. Do not add a second frontend
+> persistence layer on top. Fetch failures must degrade to a hint; features
+> with a manual-input fallback (model name) must never block on the query.
+
 ---
 
 ## Common Mistakes

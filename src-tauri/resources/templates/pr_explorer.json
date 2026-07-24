@@ -1,0 +1,29 @@
+{
+  "manifest": {
+    "id": "pr_explorer",
+    "version": "1.0.0",
+    "name": "PR 探索者",
+    "description": "只读代码库探索者，在提出改动前收集证据、梳理执行路径。",
+    "author": "OpenAI Codex 官方文档示例",
+    "source": "builtin",
+    "tags": ["代码探索", "评审"],
+    "supportedPlatforms": ["codex"],
+    "risk": { "level": "low", "summary": "只读沙盒运行，不修改工作区文件。" },
+    "adapterContracts": {
+      "codex": "codex-custom-agent-2026-07"
+    }
+  },
+  "logicalName": "pr_explorer",
+  "defaultDescription": "Read-only codebase explorer for gathering evidence before changes are proposed.",
+  "developerInstructions": "Stay in exploration mode.\nTrace the real execution path, cite files and symbols, and avoid proposing fixes unless the parent agent asks for them.\nPrefer fast search and targeted file reads over broad scans.\n",
+  "platformOverrides": {
+    "codex": {
+      "platform": "codex",
+      "config": {
+        "model": "gpt-5.3-codex-spark",
+        "modelReasoningEffort": "medium",
+        "sandboxMode": "read-only"
+      }
+    }
+  }
+}
