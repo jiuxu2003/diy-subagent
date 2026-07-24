@@ -8,10 +8,11 @@ use crate::{
         templates::{TemplatePackage, TemplateSummary},
     },
     dto::{
-        CommitAgentInstallRequestDto, ImportAgentRequestDto, ImportAgentResultDto,
-        InventoryScanDto, IpcErrorDto, NativeAgentContentDto, PlatformRequestDto,
-        PreviewAgentInstallRequestDto, RecoveryRequestDto, SavePersonalTemplateRequestDto,
-        ScanInstalledAgentsRequestDto, SourceRequestDto, TemplateRequestDto,
+        CodexModelListDto, CommitAgentInstallRequestDto, ImportAgentRequestDto,
+        ImportAgentResultDto, InventoryScanDto, IpcErrorDto, ListCodexModelsRequestDto,
+        NativeAgentContentDto, PlatformRequestDto, PreviewAgentInstallRequestDto,
+        RecoveryRequestDto, SavePersonalTemplateRequestDto, ScanInstalledAgentsRequestDto,
+        SourceRequestDto, TemplateRequestDto,
     },
     error::{AppError, AppErrorKind},
     infrastructure::macos::reveal_path,
@@ -179,6 +180,20 @@ pub async fn commit_agent_install(
     .await?;
     watcher.refresh_roots();
     Ok(result)
+}
+
+#[tauri::command]
+pub async fn list_codex_models(
+    request: ListCodexModelsRequestDto,
+    state: State<'_, AppState>,
+) -> Result<CodexModelListDto, IpcErrorDto> {
+    let service = state.model_catalog.clone();
+    run_blocking("list_codex_models", move || {
+        service
+            .list_models(request.force_refresh)
+            .map(CodexModelListDto::from)
+    })
+    .await
 }
 
 #[tauri::command]

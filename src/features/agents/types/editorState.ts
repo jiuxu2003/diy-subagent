@@ -43,9 +43,7 @@ export function createDraftFromTemplate(template: TemplatePackage): AgentDraft {
   return {
     logicalName: template.logicalName,
     description: template.defaultDescription,
-    shared: structuredClone(template.sharedDefaults),
-    responseLanguage: template.responseLanguage,
-    usage: structuredClone(template.usageDefaults),
+    developerInstructions: template.developerInstructions,
     platformOverrides: structuredClone(template.platformOverrides),
     provenance: template.manifest.source === "personal"
       ? {

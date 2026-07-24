@@ -10,6 +10,8 @@ import { cn } from "../../lib/formatting/cn";
 
 interface FieldShellProps {
   label: string;
+  /** Optional inline accessory rendered right after the label, e.g. HelpTip. */
+  labelAccessory?: ReactNode;
   hint?: string;
   error?: string;
   htmlFor: string;
@@ -18,6 +20,7 @@ interface FieldShellProps {
 
 export function FieldShell({
   label,
+  labelAccessory,
   hint,
   error,
   htmlFor,
@@ -27,12 +30,15 @@ export function FieldShell({
   return (
     <div className="space-y-2">
       <div className="flex items-baseline justify-between gap-4">
-        <label
-          className="text-sm font-medium text-[var(--text-muted)]"
-          htmlFor={htmlFor}
-        >
-          {label}
-        </label>
+        <span className="inline-flex items-center gap-1.5">
+          <label
+            className="text-sm font-medium text-[var(--text-muted)]"
+            htmlFor={htmlFor}
+          >
+            {label}
+          </label>
+          {labelAccessory}
+        </span>
         {hint
           ? <span className="text-xs text-[var(--text-subtle)]">{hint}</span>
           : null}

@@ -1,3 +1,4 @@
+import { RefreshCw } from "lucide-react";
 import { useState } from "react";
 
 import type {
@@ -14,7 +15,10 @@ import {
   Select,
   Textarea,
 } from "../../../components/ui/FormField";
+import { HelpTip } from "../../../components/ui/Tooltip";
+import { cn } from "../../../lib/formatting/cn";
 import { platformLabel } from "../../../lib/formatting/platform";
+import { useCodexModels } from "../hooks/useCodexModels";
 
 interface StructuredEditorProps {
   draft: AgentDraft;
@@ -32,18 +36,14 @@ interface StructuredEditorProps {
 
 const platforms: AgentPlatform[] = ["claude", "codex", "cursor"];
 
+type CodexPlatformOverride = Extract<PlatformOverride, { platform: "codex" }>;
+
 /**
  * Radix Select items reject empty-string values, so the "继承" choice
  * round-trips through this sentinel while the stored draft keeps null.
  */
 const INHERIT_SENTINEL = "inherit";
 const inheritOption = { value: INHERIT_SENTINEL, label: "继承" };
-
-const responseLanguageOptions = [
-  { value: "followUser", label: "跟随用户输入" },
-  { value: "simplifiedChinese", label: "简体中文" },
-  { value: "english", label: "English" },
-];
 
 const conflictActionOptions = [
   { value: "fail", label: "冲突时阻止" },
@@ -58,11 +58,20 @@ const claudePermissionModeOptions = [
   { value: "dontAsk", label: "dontAsk" },
 ];
 
+/**
+ * Official reasoning-effort ladder, low to high, per the Codex source enum
+ * (research/external.md). Availability per model is decided server-side.
+ */
 const codexReasoningEffortOptions = [
   inheritOption,
+  { value: "none", label: "none" },
+  { value: "minimal", label: "minimal" },
   { value: "low", label: "low" },
   { value: "medium", label: "medium" },
   { value: "high", label: "high" },
+  { value: "xhigh", label: "xhigh" },
+  { value: "max", label: "max" },
+  { value: "ultra", label: "ultra" },
 ];
 
 const codexSandboxModeOptions = [
@@ -72,6 +81,12 @@ const codexSandboxModeOptions = [
   { value: "danger-full-access", label: "danger-full-access" },
 ];
 
+const DEVELOPER_INSTRUCTIONS_HELP =
+  "写入 developer_instructions 的核心行为指令：定义这个子代理的职责、工作方式与边界。安装前必填。";
+
+const SANDBOX_MODE_HELP =
+  "控制子代理的文件系统权限：read-only 只读；workspace-write 可写工作区；danger-full-access 无限制（危险）。继承 = 沿用父会话的沙盒策略。";
+
 function createPlatformOverride(platform: AgentPlatform): PlatformOverride {
   switch (platform) {
     case "claude":
@@ -80,7 +95,16 @@ function createPlatformOverride(platform: AgentPlatform): PlatformOverride {
         config: { tools: [], disallowedTools: [], skills: [] },
       };
     case "codex":
-      return { platform, config: { nicknameCandidates: [] } };
+      // New codex targets start from the blank-template defaults so both
+      // entry paths agree on medium effort plus read-only sandbox.
+      return {
+        platform,
+        config: {
+          nicknameCandidates: [],
+          modelReasoningEffort: "medium",
+          sandboxMode: "read-only",
+        },
+      };
     case "cursor":
       return { platform, config: {} };
     default: {
@@ -103,21 +127,11 @@ export function StructuredEditor({
   onBack,
   personalTemplateSaveMessage,
 }: StructuredEditorProps) {
-  const [personalTemplateName, setPersonalTemplateName] = useState(
-    `${draft.logicalName} 模板`,
+  const [personalTemplateName, setPersonalTemplateName] = useState(() =>
+    draft.logicalName.trim().length > 0
+      ? `${draft.logicalName} 模板`
+      : "我的模板"
   );
-  const updateShared = <Key extends keyof AgentDraft["shared"]>(
-    key: Key,
-    value: AgentDraft["shared"][Key],
-  ) => {
-    onDraftChange({ ...draft, shared: { ...draft.shared, [key]: value } });
-  };
-  const updateUsage = <Key extends keyof AgentDraft["usage"]>(
-    key: Key,
-    value: AgentDraft["usage"][Key],
-  ) => {
-    onDraftChange({ ...draft, usage: { ...draft.usage, [key]: value } });
-  };
 
   return (
     <section aria-label="结构化编辑" className="space-y-8">
@@ -133,166 +147,68 @@ export function StructuredEditor({
         : null}
 
       <EditorSection
-        title="身份与委派描述"
+        title="基本信息"
         description="名称决定文件名与调用标识；描述决定何时自动委派。"
       >
-        <div className="grid grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] gap-5">
+        <div className="space-y-5">
+          <div className="grid grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] gap-5">
+            <FieldShell
+              htmlFor="logical-name"
+              label="名称"
+              hint="原生字段 name"
+            >
+              <Input
+                id="logical-name"
+                onChange={(event) => {
+                  onDraftChange({
+                    ...draft,
+                    logicalName: event.currentTarget.value,
+                  });
+                }}
+                spellCheck={false}
+                value={draft.logicalName}
+              />
+            </FieldShell>
+            <FieldShell
+              htmlFor="description"
+              label="描述"
+              hint="说明何时使用，也说明何时不要使用"
+            >
+              <Textarea
+                id="description"
+                onChange={(event) => {
+                  onDraftChange({
+                    ...draft,
+                    description: event.currentTarget.value,
+                  });
+                }}
+                value={draft.description}
+              />
+            </FieldShell>
+          </div>
           <FieldShell
-            htmlFor="logical-name"
-            label="逻辑名称"
-            hint="原生字段 name"
-          >
-            <Input
-              id="logical-name"
-              onChange={(event) => {
-                onDraftChange({
-                  ...draft,
-                  logicalName: event.currentTarget.value,
-                });
-              }}
-              spellCheck={false}
-              value={draft.logicalName}
-            />
-          </FieldShell>
-          <FieldShell
-            htmlFor="description"
-            label="委派描述"
-            hint="说明何时使用，也说明何时不要使用"
+            htmlFor="developer-instructions"
+            label="遵循指令"
+            labelAccessory={
+              <HelpTip
+                aria-label="遵循指令说明"
+                content={DEVELOPER_INSTRUCTIONS_HELP}
+              />
+            }
+            hint="原生字段 developer_instructions"
           >
             <Textarea
-              id="description"
+              id="developer-instructions"
               onChange={(event) => {
                 onDraftChange({
                   ...draft,
-                  description: event.currentTarget.value,
+                  developerInstructions: event.currentTarget.value,
                 });
               }}
-              value={draft.description}
+              rows={12}
+              value={draft.developerInstructions}
             />
           </FieldShell>
-        </div>
-      </EditorSection>
-
-      <EditorSection title="共享语义章节">
-        <div className="space-y-5">
-          <TextField
-            id="role-goal"
-            label="角色目标"
-            value={draft.shared.roleGoal}
-            onChange={(value) => {
-              updateShared("roleGoal", value);
-            }}
-          />
-          <div className="grid grid-cols-2 gap-5">
-            <ListField
-              id="when-to-use"
-              label="适用场景"
-              values={draft.shared.whenToUse}
-              onChange={(value) => {
-                updateShared("whenToUse", value);
-              }}
-            />
-            <ListField
-              id="when-not-to-use"
-              label="禁用场景"
-              values={draft.shared.whenNotToUse}
-              onChange={(value) => {
-                updateShared("whenNotToUse", value);
-              }}
-            />
-            <ListField
-              id="input-requirements"
-              label="输入要求"
-              values={draft.shared.inputRequirements}
-              onChange={(value) => {
-                updateShared("inputRequirements", value);
-              }}
-            />
-            <ListField
-              id="execution-steps"
-              label="执行步骤"
-              values={draft.shared.executionSteps}
-              onChange={(value) => {
-                updateShared("executionSteps", value);
-              }}
-            />
-          </div>
-          <TextField
-            id="output-contract"
-            label="输出契约"
-            value={draft.shared.outputContract}
-            onChange={(value) => {
-              updateShared("outputContract", value);
-            }}
-          />
-          <div className="grid grid-cols-2 gap-5">
-            <ListField
-              id="constraints"
-              label="约束"
-              values={draft.shared.constraints}
-              onChange={(value) => {
-                updateShared("constraints", value);
-              }}
-            />
-            <ListField
-              id="stop-conditions"
-              label="停止条件"
-              values={draft.shared.stopConditions}
-              onChange={(value) => {
-                updateShared("stopConditions", value);
-              }}
-            />
-          </div>
-          <TextField
-            id="failure-handling"
-            label="失败处理"
-            value={draft.shared.failureHandling}
-            onChange={(value) => {
-              updateShared("failureHandling", value);
-            }}
-          />
-        </div>
-      </EditorSection>
-
-      <EditorSection title="语言与使用契约">
-        <div className="grid grid-cols-2 gap-5">
-          <FieldShell htmlFor="response-language" label="响应语言">
-            <Select
-              id="response-language"
-              onValueChange={(next) => {
-                onDraftChange({
-                  ...draft,
-                  responseLanguage: next as AgentDraft["responseLanguage"],
-                });
-              }}
-              options={responseLanguageOptions}
-              value={draft.responseLanguage}
-            />
-          </FieldShell>
-          <ListField
-            id="invocation-examples"
-            label="显式调用示例"
-            values={draft.usage.explicitInvocationExamples}
-            onChange={(value) => {
-              updateUsage("explicitInvocationExamples", value);
-            }}
-          />
-          <TextField
-            id="delegation-guidance"
-            label="自动委派建议"
-            value={draft.usage.autoDelegationGuidance}
-            onChange={(value) => {
-              updateUsage("autoDelegationGuidance", value);
-            }}
-          />
-          <TextField
-            id="verification-task"
-            label="安装后验证任务"
-            value={draft.usage.verificationTask}
-            onChange={(value) => {
-              updateUsage("verificationTask", value);
-            }}
-          />
         </div>
       </EditorSection>
 
@@ -391,54 +307,6 @@ function EditorSection({
       </div>
       {children}
     </section>
-  );
-}
-
-function TextField({
-  id,
-  label,
-  value,
-  onChange,
-}: {
-  id: string;
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <FieldShell htmlFor={id} label={label}>
-      <Textarea
-        id={id}
-        onChange={(event) => {
-          onChange(event.currentTarget.value);
-        }}
-        value={value}
-      />
-    </FieldShell>
-  );
-}
-
-function ListField({
-  id,
-  label,
-  values,
-  onChange,
-}: {
-  id: string;
-  label: string;
-  values: string[];
-  onChange: (values: string[]) => void;
-}) {
-  return (
-    <FieldShell htmlFor={id} hint="每行一项" label={label}>
-      <Textarea
-        id={id}
-        onChange={(event) => {
-          onChange(lines(event.currentTarget.value));
-        }}
-        value={values.join("\n")}
-      />
-    </FieldShell>
   );
 }
 
@@ -611,58 +479,7 @@ function PlatformAdvancedFields({
     );
   }
   if (value.platform === "codex") {
-    return (
-      <div className="mt-3 grid grid-cols-3 gap-5 border-t border-[var(--border)] pt-3">
-        <FieldShell htmlFor="codex-model" label="model">
-          <Input
-            id="codex-model"
-            onChange={(event) => {
-              update({
-                ...value,
-                config: {
-                  ...value.config,
-                  model: nullable(event.currentTarget.value),
-                },
-              });
-            }}
-            placeholder="继承父会话"
-            value={value.config.model ?? ""}
-          />
-        </FieldShell>
-        <FieldShell htmlFor="codex-effort" label="model_reasoning_effort">
-          <Select
-            id="codex-effort"
-            onValueChange={(next) => {
-              update({
-                ...value,
-                config: {
-                  ...value.config,
-                  modelReasoningEffort: fromSelectValue(next),
-                },
-              });
-            }}
-            options={codexReasoningEffortOptions}
-            value={toSelectValue(value.config.modelReasoningEffort)}
-          />
-        </FieldShell>
-        <FieldShell htmlFor="codex-sandbox" label="sandbox_mode">
-          <Select
-            id="codex-sandbox"
-            onValueChange={(next) => {
-              update({
-                ...value,
-                config: {
-                  ...value.config,
-                  sandboxMode: fromSelectValue(next),
-                },
-              });
-            }}
-            options={codexSandboxModeOptions}
-            value={toSelectValue(value.config.sandboxMode)}
-          />
-        </FieldShell>
-      </div>
-    );
+    return <CodexAdvancedFields onUpdate={update} value={value} />;
   }
   return (
     <div className="mt-3 grid grid-cols-3 gap-5 border-t border-[var(--border)] pt-3">
@@ -720,11 +537,124 @@ function PlatformAdvancedFields({
   );
 }
 
-function lines(value: string): string[] {
-  return value
-    .split("\n")
-    .map((item) => item.trim())
-    .filter(Boolean);
+/**
+ * Codex advanced row. Lives in its own component so the model catalog is
+ * only fetched once the Codex target is actually selected.
+ */
+function CodexAdvancedFields({
+  value,
+  onUpdate,
+}: {
+  value: CodexPlatformOverride;
+  onUpdate: (next: PlatformOverride) => void;
+}) {
+  const models = useCodexModels();
+  const catalogModels = models.catalog?.models ?? [];
+
+  return (
+    <div className="mt-3 grid grid-cols-3 gap-5 border-t border-[var(--border)] pt-3">
+      <FieldShell
+        htmlFor="codex-model"
+        label="model"
+        hint={modelCatalogHint(models)}
+      >
+        <div className="flex items-center gap-2">
+          <Input
+            id="codex-model"
+            list="codex-model-options"
+            onChange={(event) => {
+              onUpdate({
+                ...value,
+                config: {
+                  ...value.config,
+                  model: nullable(event.currentTarget.value),
+                },
+              });
+            }}
+            placeholder="继承父会话"
+            spellCheck={false}
+            value={value.config.model ?? ""}
+          />
+          <datalist id="codex-model-options">
+            {catalogModels.map((model) => <option key={model} value={model} />)}
+          </datalist>
+          <Button
+            aria-label="刷新模型列表"
+            className="shrink-0"
+            disabled={models.isFetching}
+            onClick={() => {
+              models.refresh();
+            }}
+            size="icon"
+            variant="secondary"
+          >
+            <RefreshCw
+              aria-hidden="true"
+              className={cn("size-3.5", models.isFetching && "animate-spin")}
+            />
+          </Button>
+        </div>
+      </FieldShell>
+      <FieldShell htmlFor="codex-effort" label="model_reasoning_effort">
+        <Select
+          id="codex-effort"
+          onValueChange={(next) => {
+            onUpdate({
+              ...value,
+              config: {
+                ...value.config,
+                modelReasoningEffort: fromSelectValue(next),
+              },
+            });
+          }}
+          options={codexReasoningEffortOptions}
+          value={toSelectValue(value.config.modelReasoningEffort)}
+        />
+      </FieldShell>
+      <FieldShell
+        htmlFor="codex-sandbox"
+        label="sandbox_mode"
+        labelAccessory={
+          <HelpTip aria-label="沙盒模式说明" content={SANDBOX_MODE_HELP} />
+        }
+      >
+        <Select
+          id="codex-sandbox"
+          onValueChange={(next) => {
+            onUpdate({
+              ...value,
+              config: {
+                ...value.config,
+                sandboxMode: fromSelectValue(next),
+              },
+            });
+          }}
+          options={codexSandboxModeOptions}
+          value={toSelectValue(value.config.sandboxMode)}
+        />
+      </FieldShell>
+    </div>
+  );
+}
+
+/** Status line under the model input; failures downgrade to manual entry. */
+function modelCatalogHint(models: ReturnType<typeof useCodexModels>): string {
+  if (models.isFetching) {
+    return "正在获取模型列表…";
+  }
+  if (models.isError) {
+    return "获取模型列表失败，可手动输入";
+  }
+  if (models.catalog === null) {
+    return "可手动输入";
+  }
+  if (models.catalog.models.length === 0) {
+    return "模型列表为空，可手动输入";
+  }
+  if (models.catalog.fromCache) {
+    return "列表来自缓存，可手动输入";
+  }
+  return `已获取 ${String(models.catalog.models.length)} 个模型`;
 }
 
 function commaItems(value: string): string[] {

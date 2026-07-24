@@ -8,6 +8,8 @@ import {
   agentPlatformSchema,
   type BatchCommitResult,
   batchCommitResultSchema,
+  type CodexModelList,
+  codexModelListSchema,
   type ImportAgentResult,
   importAgentResultSchema,
   type InventoryScan,
@@ -105,6 +107,12 @@ export const appIpc = {
     const parsed = savePersonalTemplateRequestSchema.parse(request);
     return call("save_personal_template", templateSummarySchema, {
       request: parsed,
+    });
+  },
+
+  listCodexModels(request: { forceRefresh: boolean }): Promise<CodexModelList> {
+    return call("list_codex_models", codexModelListSchema, {
+      request: { forceRefresh: request.forceRefresh },
     });
   },
 

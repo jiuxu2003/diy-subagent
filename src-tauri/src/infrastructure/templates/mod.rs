@@ -4,7 +4,7 @@ use walkdir::WalkDir;
 
 use crate::{
     domain::{
-        agents::{validate_agent_draft, validate_logical_name},
+        agents::validate_logical_name,
         ports::Clock,
         templates::{TemplatePackage, TemplateSummary},
     },
@@ -17,12 +17,12 @@ use crate::{
 
 const BUILTIN_TEMPLATES: [&str; 7] = [
     include_str!("../../../resources/templates/custom-blank.json"),
-    include_str!("../../../resources/templates/requirements-clarifier.json"),
-    include_str!("../../../resources/templates/architecture-mapper.json"),
-    include_str!("../../../resources/templates/docs-researcher.json"),
-    include_str!("../../../resources/templates/root-cause-debugger.json"),
-    include_str!("../../../resources/templates/code-reviewer.json"),
-    include_str!("../../../resources/templates/delivery-verifier.json"),
+    include_str!("../../../resources/templates/pr_explorer.json"),
+    include_str!("../../../resources/templates/reviewer.json"),
+    include_str!("../../../resources/templates/docs_researcher.json"),
+    include_str!("../../../resources/templates/code_mapper.json"),
+    include_str!("../../../resources/templates/browser_debugger.json"),
+    include_str!("../../../resources/templates/ui_fixer.json"),
 ];
 
 pub struct TemplateRepository {
@@ -132,8 +132,13 @@ fn parse_template(bytes: &[u8], source_label: &str) -> Result<TemplatePackage, A
 fn validate_template(package: &TemplatePackage) -> Result<(), AppError> {
     validate_logical_name(&package.manifest.id)
         .map_err(|issue| AppError::validation(vec![issue]))?;
-    validate_logical_name(&package.logical_name)
-        .map_err(|issue| AppError::validation(vec![issue]))?;
+    // Blank starting points may ship an empty logical name; the format is
+    // only enforced once the user actually fills one in. Draft-level required
+    // fields are checked at preview time, not at template load time.
+    if !package.logical_name.trim().is_empty() {
+        validate_logical_name(&package.logical_name)
+            .map_err(|issue| AppError::validation(vec![issue]))?;
+    }
     if package.manifest.version.trim().is_empty()
         || package.manifest.name.trim().is_empty()
         || package.manifest.description.trim().is_empty()
@@ -143,10 +148,6 @@ fn validate_template(package: &TemplatePackage) -> Result<(), AppError> {
             AppErrorKind::Validation,
             "模板 manifest 缺少必填信息。",
         ));
-    }
-    let draft_issues = validate_agent_draft(&package.to_draft());
-    if !draft_issues.is_empty() {
-        return Err(AppError::validation(draft_issues));
     }
     for platform in &package.manifest.supported_platforms {
         if !package.platform_overrides.contains_key(platform) {

@@ -633,8 +633,7 @@ mod tests {
     use crate::{
         domain::{
             agents::{
-                ClaudeOverride, CodexOverride, CommitTargetStatus, CursorOverride,
-                PlatformOverride, ResponseLanguage, SharedInstructionContract, UsageContract,
+                ClaudeOverride, CodexOverride, CommitTargetStatus, CursorOverride, PlatformOverride,
             },
             ports::Clock,
         },
@@ -710,23 +709,9 @@ mod tests {
         AgentDraft {
             logical_name: "test-agent".to_owned(),
             description: "Use this agent for contract tests.".to_owned(),
-            shared: SharedInstructionContract {
-                role_goal: "Inspect the requested work.".to_owned(),
-                when_to_use: vec!["The task needs focused analysis.".to_owned()],
-                when_not_to_use: vec!["The task is already complete.".to_owned()],
-                input_requirements: vec!["The original request.".to_owned()],
-                execution_steps: vec!["Inspect the evidence.".to_owned()],
-                output_contract: "Return a verifiable result.".to_owned(),
-                constraints: vec!["Do not invent evidence.".to_owned()],
-                stop_conditions: vec!["The result is verified.".to_owned()],
-                failure_handling: "Report missing evidence.".to_owned(),
-            },
-            response_language: ResponseLanguage::FollowUser,
-            usage: UsageContract {
-                explicit_invocation_examples: vec!["Inspect this task.".to_owned()],
-                auto_delegation_guidance: "Use for focused analysis.".to_owned(),
-                verification_task: "Verify the result against the source.".to_owned(),
-            },
+            developer_instructions:
+                "Inspect the requested work.\nReturn a verifiable result and report missing evidence."
+                    .to_owned(),
             platform_overrides: BTreeMap::from([
                 (
                     AgentPlatform::Claude,

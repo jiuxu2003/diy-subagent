@@ -1,48 +1,87 @@
 import { describe, expect, it } from "vitest";
 
-import type { AgentDraft } from "../../../contracts";
-import { agentEditorReducer, createInitialEditorState } from "./editorState";
+import type { AgentDraft, TemplatePackage } from "../../../contracts";
+import { templatePackageSchema } from "../../../contracts";
+import {
+  agentEditorReducer,
+  createDraftFromTemplate,
+  createInitialEditorState,
+} from "./editorState";
 
 const draft: AgentDraft = {
-  logicalName: "requirements-clarifier",
-  description: "Clarifies requirements.",
-  shared: {
-    roleGoal: "Clarify requirements.",
-    whenToUse: ["Requirements are ambiguous."],
-    whenNotToUse: ["Requirements are complete."],
-    inputRequirements: ["Original request."],
-    executionSteps: ["Inspect evidence."],
-    outputContract: "Return testable requirements.",
-    constraints: ["Ask one question at a time."],
-    stopConditions: ["Acceptance is testable."],
-    failureHandling: "Report missing evidence.",
-  },
-  responseLanguage: "followUser",
-  usage: {
-    explicitInvocationExamples: ["Clarify this request."],
-    autoDelegationGuidance: "Use for ambiguous work.",
-    verificationTask: "Check every criterion is testable.",
-  },
+  logicalName: "pr_explorer",
+  description: "Read-only codebase explorer.",
+  developerInstructions: "Stay in exploration mode and report findings.",
   platformOverrides: {
-    claude: {
-      platform: "claude",
-      config: { tools: [], disallowedTools: [], skills: [] },
-    },
     codex: {
       platform: "codex",
-      config: { nicknameCandidates: [] },
-    },
-    cursor: {
-      platform: "cursor",
-      config: {},
+      config: {
+        nicknameCandidates: [],
+        modelReasoningEffort: "medium",
+        sandboxMode: "read-only",
+      },
     },
   },
   provenance: {
     kind: "builtinTemplate",
-    templateId: "requirements-clarifier",
+    templateId: "pr_explorer",
     templateVersion: "1.0.0",
   },
 };
+
+const template: TemplatePackage = templatePackageSchema.parse({
+  manifest: {
+    id: "pr_explorer",
+    version: "1.0.0",
+    name: "PR 探索者",
+    description: "只读梳理 PR 变更与影响面。",
+    author: "OpenAI Codex 官方文档示例",
+    source: "builtin",
+    tags: [],
+    supportedPlatforms: ["codex"],
+    risk: { level: "low", summary: "只读沙盒运行。" },
+    adapterContracts: { codex: "codex-custom-agent-2026-07" },
+  },
+  logicalName: "pr_explorer",
+  defaultDescription: "Read-only codebase explorer.",
+  developerInstructions: "Stay in exploration mode and report findings.",
+  platformOverrides: {
+    codex: {
+      platform: "codex",
+      config: {
+        nicknameCandidates: [],
+        modelReasoningEffort: "medium",
+        sandboxMode: "read-only",
+      },
+    },
+  },
+});
+
+describe("createDraftFromTemplate", () => {
+  it("copies the template developer instructions into the draft", () => {
+    const created = createDraftFromTemplate(template);
+
+    expect(created.logicalName).toBe("pr_explorer");
+    expect(created.developerInstructions).toBe(
+      "Stay in exploration mode and report findings.",
+    );
+    expect(Object.keys(created.platformOverrides)).toEqual(["codex"]);
+    expect(created.provenance).toEqual({
+      kind: "builtinTemplate",
+      templateId: "pr_explorer",
+      templateVersion: "1.0.0",
+    });
+  });
+
+  it("derives the initial targets from the template overrides", () => {
+    const state = createInitialEditorState(createDraftFromTemplate(template));
+
+    expect(state.status).toBe("editing");
+    expect(state.targets).toEqual([
+      { platform: "codex", conflictAction: "fail" },
+    ]);
+  });
+});
 
 describe("agentEditorReducer", () => {
   it("invalidates a preview when the draft changes", () => {

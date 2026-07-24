@@ -58,7 +58,7 @@ export function AgentWorkflow(
     if (!parsed.success) {
       dispatch({
         type: "previewFailed",
-        error: parsed.error.issues[0]?.message ?? "请检查结构化章节。",
+        error: parsed.error.issues[0]?.message ?? "请检查必填字段。",
       });
       return;
     }

@@ -54,36 +54,6 @@ impl fmt::Display for AgentPlatform {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ResponseLanguage {
-    FollowUser,
-    SimplifiedChinese,
-    English,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SharedInstructionContract {
-    pub role_goal: String,
-    pub when_to_use: Vec<String>,
-    pub when_not_to_use: Vec<String>,
-    pub input_requirements: Vec<String>,
-    pub execution_steps: Vec<String>,
-    pub output_contract: String,
-    pub constraints: Vec<String>,
-    pub stop_conditions: Vec<String>,
-    pub failure_handling: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UsageContract {
-    pub explicit_invocation_examples: Vec<String>,
-    pub auto_delegation_guidance: String,
-    pub verification_task: String,
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
@@ -108,6 +78,23 @@ pub struct CodexOverride {
     pub model_reasoning_effort: Option<String>,
     pub sandbox_mode: Option<String>,
     pub nickname_candidates: Vec<String>,
+    /// Free-form native TOML fragment (for example `[mcp_servers.*]` or
+    /// `[[skills.config]]` tables) merged into the rendered Codex file.
+    pub extra_toml: Option<String>,
+}
+
+impl CodexOverride {
+    /// Top-level Codex TOML keys rendered from structured draft fields; the
+    /// free-form `extra_toml` fragment must not redefine any of them.
+    pub const RESERVED_TOP_LEVEL_KEYS: [&'static str; 7] = [
+        "name",
+        "description",
+        "developer_instructions",
+        "nickname_candidates",
+        "model",
+        "model_reasoning_effort",
+        "sandbox_mode",
+    ];
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
@@ -166,9 +153,10 @@ pub enum DraftProvenance {
 pub struct AgentDraft {
     pub logical_name: String,
     pub description: String,
-    pub shared: SharedInstructionContract,
-    pub response_language: ResponseLanguage,
-    pub usage: UsageContract,
+    /// Free-form instructions rendered verbatim as the native instruction
+    /// body (`developer_instructions` on Codex, Markdown body on Claude and
+    /// Cursor).
+    pub developer_instructions: String,
     pub platform_overrides: BTreeMap<AgentPlatform, PlatformOverride>,
     pub provenance: DraftProvenance,
 }

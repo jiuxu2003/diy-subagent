@@ -2,10 +2,7 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::domain::agents::{
-    AgentDraft, AgentPlatform, DraftProvenance, PlatformOverride, ResponseLanguage,
-    SharedInstructionContract, UsageContract,
-};
+use crate::domain::agents::{AgentDraft, AgentPlatform, DraftProvenance, PlatformOverride};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -35,20 +32,23 @@ pub struct TemplatePackage {
     pub manifest: TemplateManifest,
     pub logical_name: String,
     pub default_description: String,
-    pub shared_defaults: SharedInstructionContract,
-    pub usage_defaults: UsageContract,
-    pub response_language: ResponseLanguage,
+    /// Default instruction body; older personal-template JSON files without
+    /// this key deserialize to an empty string instead of failing startup.
+    #[serde(default)]
+    pub developer_instructions: String,
     pub platform_overrides: BTreeMap<AgentPlatform, PlatformOverride>,
 }
 
 impl TemplatePackage {
+    /// Projects the package into an editable draft. Production drafts are
+    /// assembled by the frontend from the loaded package; this projection is
+    /// exercised by template and transaction tests.
+    #[cfg_attr(not(test), allow(dead_code))]
     pub fn to_draft(&self) -> AgentDraft {
         AgentDraft {
             logical_name: self.logical_name.clone(),
             description: self.default_description.clone(),
-            shared: self.shared_defaults.clone(),
-            response_language: self.response_language,
-            usage: self.usage_defaults.clone(),
+            developer_instructions: self.developer_instructions.clone(),
             platform_overrides: self.platform_overrides.clone(),
             provenance: DraftProvenance::BuiltinTemplate {
                 template_id: self.manifest.id.clone(),

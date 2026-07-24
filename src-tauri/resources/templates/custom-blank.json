@@ -15,28 +15,12 @@
       "cursor": "cursor-subagent-2026-07"
     }
   },
-  "logicalName": "my-agent",
-  "defaultDescription": "描述这个 subagent 负责什么，以及主会话在什么情况下应该把任务交给它。",
-  "sharedDefaults": {
-    "roleGoal": "用一句话写清这个 subagent 的角色和要达成的目标。",
-    "whenToUse": ["写一个应该交给它处理的场景。"],
-    "whenNotToUse": ["写一个不应该使用它的场景。"],
-    "inputRequirements": ["写清它开始工作前需要拿到的输入。"],
-    "executionSteps": ["写出它完成任务的关键步骤。"],
-    "outputContract": "写清它最终交付的内容和格式。",
-    "constraints": ["写一条它必须遵守的约束。"],
-    "stopConditions": ["写一条它可以停止工作的完成标准。"],
-    "failureHandling": "写清信息不足或执行失败时它应该怎么处理。"
-  },
-  "usageDefaults": {
-    "explicitInvocationExamples": ["写一句你会如何显式调用它的示例。"],
-    "autoDelegationGuidance": "写清主会话在什么情况下应自动委派给它。",
-    "verificationTask": "写一个安装后用来验证它按预期工作的小任务。"
-  },
-  "responseLanguage": "followUser",
+  "logicalName": "",
+  "defaultDescription": "",
+  "developerInstructions": "",
   "platformOverrides": {
     "claude": { "platform": "claude", "config": {} },
-    "codex": { "platform": "codex", "config": {} },
+    "codex": { "platform": "codex", "config": { "modelReasoningEffort": "medium", "sandboxMode": "read-only" } },
     "cursor": { "platform": "cursor", "config": {} }
   }
 }

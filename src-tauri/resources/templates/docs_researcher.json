@@ -1,0 +1,30 @@
+{
+  "manifest": {
+    "id": "docs_researcher",
+    "version": "1.0.0",
+    "name": "文档研究员",
+    "description": "通过 docs MCP 服务器核对 API 与框架行为的文档专家。",
+    "author": "OpenAI Codex 官方文档示例",
+    "source": "builtin",
+    "tags": ["文档", "MCP"],
+    "supportedPlatforms": ["codex"],
+    "risk": { "level": "low", "summary": "只读沙盒运行；通过远程 MCP 服务器访问官方文档。" },
+    "adapterContracts": {
+      "codex": "codex-custom-agent-2026-07"
+    }
+  },
+  "logicalName": "docs_researcher",
+  "defaultDescription": "Documentation specialist that uses the docs MCP server to verify APIs and framework behavior.",
+  "developerInstructions": "Use the docs MCP server to confirm APIs, options, and version-specific behavior.\nReturn concise answers with links or exact references when available.\nDo not make code changes.\n",
+  "platformOverrides": {
+    "codex": {
+      "platform": "codex",
+      "config": {
+        "model": "gpt-5.4-mini",
+        "modelReasoningEffort": "medium",
+        "sandboxMode": "read-only",
+        "extraToml": "[mcp_servers.openaiDeveloperDocs]\nurl = \"https://developers.openai.com/mcp\"\n"
+      }
+    }
+  }
+}

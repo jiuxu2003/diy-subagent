@@ -1,0 +1,11 @@
+{"file": ".trellis/tasks/07-23-codex-simplify/research/codebase.md", "reason": "代码库现状：指令契约管线、preserved_fields、模板契约、IPC 面、缓存与 UI 原语、受影响测试全清单"}
+{"file": ".trellis/tasks/07-23-codex-simplify/research/external.md", "reason": "官方口径：model_reasoning_effort 档位、sandbox_mode、base_url/api key 解析优先级、/v1/models 形状、cc-switch 交互"}
+{"file": ".trellis/spec/backend/index.md", "reason": "后端分层与约定索引"}
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "commands→services→domain 分层与新文件落位（codex_config.rs、model_catalog.rs）"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "AppError/IpcErrorDto 约定；模型拉取失败路径需遵守"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "cargo fmt/clippy/test 质量门"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "前端约定索引"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "TanStack Query 所有权与 queryKeys 集中管理（codexModels 新键）"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "components/ui 原语规范（新增 Tooltip/HelpTip）"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "zod 契约与 appIpc 运行时校验四件套"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "IPC 契约跨层同改（DTO+zod+appIpc+fixtures）思考清单"}

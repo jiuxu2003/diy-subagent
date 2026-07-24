@@ -5,10 +5,9 @@ use toml_edit::{value, Array, DocumentMut, Item, Value};
 use crate::{
     domain::{
         agents::{
-            parse_structured_instructions, render_structured_instructions, validate_agent_draft,
-            AgentDraft, AgentPlatform, CapabilityDisposition, CapabilityIssue, CodexOverride,
-            DraftProvenance, NativeFormat, PlatformOverride, ResponseLanguage,
-            SharedInstructionContract, UsageContract, ValidationIssue,
+            validate_agent_draft, AgentDraft, AgentPlatform, CapabilityDisposition,
+            CapabilityIssue, CodexOverride, DraftProvenance, NativeFormat, PlatformOverride,
+            ValidationIssue,
         },
         ports::{AgentFormatAdapter, ParsedNativeAgent, RenderedNativeAgent},
     },
@@ -16,15 +15,6 @@ use crate::{
 };
 
 const CONTRACT_VERSION: &str = "codex-custom-agent-2026-07";
-const KNOWN_FIELDS: [&str; 7] = [
-    "name",
-    "description",
-    "developer_instructions",
-    "nickname_candidates",
-    "model",
-    "model_reasoning_effort",
-    "sandbox_mode",
-];
 
 #[derive(Debug, Default)]
 pub struct CodexAdapter;
@@ -64,29 +54,6 @@ impl AgentFormatAdapter for CodexAdapter {
         let name = required_string(&document, "name")?;
         let description = required_string(&document, "description")?;
         let developer_instructions = required_string(&document, "developer_instructions")?;
-        let structured = parse_structured_instructions(&developer_instructions);
-        let editable = structured.is_some();
-        let (shared, response_language, usage) = structured.unwrap_or_else(|| {
-            (
-                SharedInstructionContract {
-                    role_goal: developer_instructions,
-                    when_to_use: Vec::new(),
-                    when_not_to_use: Vec::new(),
-                    input_requirements: Vec::new(),
-                    execution_steps: Vec::new(),
-                    output_contract: String::new(),
-                    constraints: Vec::new(),
-                    stop_conditions: Vec::new(),
-                    failure_handling: String::new(),
-                },
-                ResponseLanguage::FollowUser,
-                UsageContract {
-                    explicit_invocation_examples: Vec::new(),
-                    auto_delegation_guidance: String::new(),
-                    verification_task: String::new(),
-                },
-            )
-        });
         let mut platform_overrides = BTreeMap::new();
         platform_overrides.insert(
             AgentPlatform::Codex,
@@ -95,13 +62,17 @@ impl AgentFormatAdapter for CodexAdapter {
                 model_reasoning_effort: optional_string(&document, "model_reasoning_effort"),
                 sandbox_mode: optional_string(&document, "sandbox_mode"),
                 nickname_candidates: string_array(&document, "nickname_candidates"),
+                // Unknown tables stay in the original file and are preserved
+                // through the `original_bytes` render path; only their key
+                // names are surfaced via `preserved_fields`.
+                extra_toml: None,
             }),
         );
 
         let preserved_fields = document
             .iter()
             .map(|(key, _)| key)
-            .filter(|key| !KNOWN_FIELDS.contains(key))
+            .filter(|key| !CodexOverride::RESERVED_TOP_LEVEL_KEYS.contains(key))
             .map(str::to_owned)
             .collect();
 
@@ -109,19 +80,14 @@ impl AgentFormatAdapter for CodexAdapter {
             draft: AgentDraft {
                 logical_name: name,
                 description,
-                shared,
-                response_language,
-                usage,
+                developer_instructions,
                 platform_overrides,
                 provenance: DraftProvenance::NativeSource {
                     platform: AgentPlatform::Codex,
                 },
             },
-            editable,
-            blocked_reason: (!editable).then(|| {
-                "该 Codex Agent 不包含 DIY Subagent 结构化标记；可只读查看，但不能在应用内覆盖。"
-                    .to_owned()
-            }),
+            editable: true,
+            blocked_reason: None,
             preserved_fields,
         })
     }
@@ -152,7 +118,7 @@ impl AgentFormatAdapter for CodexAdapter {
 
         document["name"] = value(draft.logical_name.trim());
         document["description"] = value(draft.description.trim());
-        document["developer_instructions"] = value(render_structured_instructions(draft));
+        document["developer_instructions"] = value(draft.developer_instructions.trim());
 
         let platform_override = match draft.platform_overrides.get(&AgentPlatform::Codex) {
             Some(PlatformOverride::Codex(value)) => value.clone(),
@@ -178,10 +144,11 @@ impl AgentFormatAdapter for CodexAdapter {
             }
             document["nickname_candidates"] = Item::Value(Value::Array(values));
         }
+        merge_extra_toml(&mut document, platform_override.extra_toml.as_deref())?;
 
         let capability_issues = vec![CapabilityIssue {
             id: "codex.prompt-only-tool-contract".to_owned(),
-            field: "shared.constraints".to_owned(),
+            field: "developerInstructions".to_owned(),
             platform: AgentPlatform::Codex,
             disposition: CapabilityDisposition::PromptOnly,
             explanation: "Codex 可通过 sandbox_mode 强制沙箱边界，但工具白名单等工作契约仍主要依赖 developer_instructions。"
@@ -195,6 +162,23 @@ impl AgentFormatAdapter for CodexAdapter {
             capability_issues,
         })
     }
+}
+
+/// Merges the free-form TOML fragment into the rendered document. Same-key
+/// assignment replaces the existing item, so tables never duplicate.
+/// Reserved-key collisions are rejected earlier by draft validation.
+fn merge_extra_toml(document: &mut DocumentMut, extra_toml: Option<&str>) -> Result<(), AppError> {
+    let Some(extra) = extra_toml.map(str::trim).filter(|value| !value.is_empty()) else {
+        return Ok(());
+    };
+    let fragment = DocumentMut::from_str(extra).map_err(|source| {
+        AppError::new(AppErrorKind::Validation, "附加 TOML 无法解析，请检查语法。")
+            .with_source(source)
+    })?;
+    for (key, item) in fragment.iter() {
+        document.insert(key, item.clone());
+    }
+    Ok(())
 }
 
 fn required_string(document: &DocumentMut, field: &'static str) -> Result<String, AppError> {
@@ -244,10 +228,7 @@ mod tests {
     use std::collections::BTreeMap;
 
     use crate::domain::{
-        agents::{
-            AgentDraft, AgentPlatform, CodexOverride, DraftProvenance, PlatformOverride,
-            ResponseLanguage, SharedInstructionContract, UsageContract,
-        },
+        agents::{AgentDraft, AgentPlatform, CodexOverride, DraftProvenance, PlatformOverride},
         ports::AgentFormatAdapter,
     };
 
@@ -263,7 +244,7 @@ developer_instructions = "legacy body"
 [mcp_servers.docs]
 url = "https://developers.openai.com/mcp"
 "#;
-        let draft = sample_draft();
+        let draft = sample_draft(CodexOverride::default());
         let rendered = CodexAdapter
             .render(&draft, Some(original))
             .expect("render succeeds");
@@ -273,32 +254,105 @@ url = "https://developers.openai.com/mcp"
         assert!(text.contains("developer_instructions"));
     }
 
-    fn sample_draft() -> AgentDraft {
-        let mut overrides = BTreeMap::new();
-        overrides.insert(
-            AgentPlatform::Codex,
-            PlatformOverride::Codex(CodexOverride::default()),
+    #[test]
+    fn parses_a_plain_native_file_as_editable() {
+        let original = br#"
+name = "docs_researcher"
+description = "Documentation specialist."
+developer_instructions = "Use the docs MCP server.\nDo not make code changes."
+model = "gpt-5.4-mini"
+model_reasoning_effort = "medium"
+sandbox_mode = "read-only"
+
+[mcp_servers.openaiDeveloperDocs]
+url = "https://developers.openai.com/mcp"
+"#;
+        let parsed = CodexAdapter
+            .parse(original, "docs_researcher.toml")
+            .expect("plain TOML parses");
+
+        assert!(parsed.editable);
+        assert_eq!(parsed.blocked_reason, None);
+        assert_eq!(parsed.draft.logical_name, "docs_researcher");
+        assert_eq!(
+            parsed.draft.developer_instructions,
+            "Use the docs MCP server.\nDo not make code changes."
         );
+        assert_eq!(parsed.preserved_fields, vec!["mcp_servers".to_owned()]);
+    }
+
+    #[test]
+    fn renders_extra_toml_tables_into_the_document() {
+        let draft = sample_draft(CodexOverride {
+            model: Some("gpt-5.4-mini".to_owned()),
+            model_reasoning_effort: Some("medium".to_owned()),
+            sandbox_mode: Some("read-only".to_owned()),
+            extra_toml: Some(
+                "[mcp_servers.openaiDeveloperDocs]\nurl = \"https://developers.openai.com/mcp\"\n"
+                    .to_owned(),
+            ),
+            ..CodexOverride::default()
+        });
+        let rendered = CodexAdapter.render(&draft, None).expect("render succeeds");
+        let text = String::from_utf8(rendered.bytes).expect("valid UTF-8");
+
+        assert!(text.contains("[mcp_servers.openaiDeveloperDocs]"));
+        assert!(text.contains("url = \"https://developers.openai.com/mcp\""));
+        let reparsed = CodexAdapter
+            .parse(text.as_bytes(), "reviewer.toml")
+            .expect("rendered TOML parses back");
+        assert!(reparsed.editable);
+    }
+
+    #[test]
+    fn extra_toml_replaces_the_same_table_from_original_bytes_without_duplication() {
+        let original = br#"
+name = "reviewer"
+description = "Reviews changes."
+developer_instructions = "legacy body"
+
+[mcp_servers.docs]
+url = "https://old.example.com/mcp"
+"#;
+        let draft = sample_draft(CodexOverride {
+            extra_toml: Some(
+                "[mcp_servers.docs]\nurl = \"https://developers.openai.com/mcp\"\n".to_owned(),
+            ),
+            ..CodexOverride::default()
+        });
+        let rendered = CodexAdapter
+            .render(&draft, Some(original))
+            .expect("render succeeds");
+        let text = String::from_utf8(rendered.bytes).expect("valid UTF-8");
+
+        assert_eq!(text.matches("[mcp_servers.docs]").count(), 1);
+        assert!(text.contains("https://developers.openai.com/mcp"));
+        assert!(!text.contains("https://old.example.com/mcp"));
+    }
+
+    #[test]
+    fn unparseable_extra_toml_fails_render_with_a_validation_error() {
+        let draft = sample_draft(CodexOverride {
+            extra_toml: Some("[broken\nurl =".to_owned()),
+            ..CodexOverride::default()
+        });
+
+        let error = CodexAdapter
+            .render(&draft, None)
+            .expect_err("broken fragment is rejected");
+
+        assert_eq!(error.kind, crate::error::AppErrorKind::Validation);
+    }
+
+    fn sample_draft(codex: CodexOverride) -> AgentDraft {
+        let mut overrides = BTreeMap::new();
+        overrides.insert(AgentPlatform::Codex, PlatformOverride::Codex(codex));
         AgentDraft {
             logical_name: "reviewer".to_owned(),
             description: "Reviews changes.".to_owned(),
-            shared: SharedInstructionContract {
-                role_goal: "审查代码。".to_owned(),
-                when_to_use: vec!["代码发生变更。".to_owned()],
-                when_not_to_use: vec!["没有代码变更。".to_owned()],
-                input_requirements: vec!["待审 diff。".to_owned()],
-                execution_steps: vec!["检查风险。".to_owned()],
-                output_contract: "按严重度输出问题。".to_owned(),
-                constraints: vec!["不修改代码。".to_owned()],
-                stop_conditions: vec!["已覆盖所有变更。".to_owned()],
-                failure_handling: "说明无法验证的部分。".to_owned(),
-            },
-            response_language: ResponseLanguage::FollowUser,
-            usage: UsageContract {
-                explicit_invocation_examples: vec!["审查这个 diff。".to_owned()],
-                auto_delegation_guidance: "完成实现后使用。".to_owned(),
-                verification_task: "确认报告包含证据。".to_owned(),
-            },
+            developer_instructions:
+                "Review code like an owner.\nPrioritize correctness, security, behavior regressions, and missing test coverage."
+                    .to_owned(),
             platform_overrides: overrides,
             provenance: DraftProvenance::BuiltinTemplate {
                 template_id: "reviewer".to_owned(),

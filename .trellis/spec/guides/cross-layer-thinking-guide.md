@@ -294,6 +294,26 @@ When a CLI auto-detects a mode by probing a remote resource (e.g., checking if `
 
 ---
 
+## Agent Draft Contract Fan-Out (DIY Subagent)
+
+`AgentDraft` / `TemplatePackage` shape changes are the widest boundary in this
+repo. One field rename fans out to all of:
+
+- [ ] Rust domain structs + `validate_agent_draft` (`src-tauri/src/domain/agents/`)
+- [ ] Every adapter render/parse (`src-tauri/src/adapters/agents/`)
+- [ ] DTO layer + `generate_handler!` registration (`dto/mod.rs`, `lib.rs`)
+- [ ] Zod schemas + `appIpc` (`src/contracts/index.ts`, `src/lib/ipc/client.ts`)
+- [ ] Shared fixtures locked from BOTH sides (`tests/fixtures/*.json`)
+- [ ] Frontend required-field mirror (`src/lib/validation/agentDraft.ts`)
+- [ ] All seven builtin template JSONs (`src-tauri/resources/templates/`) —
+      invalid builtin templates make `AppState::from_paths` fail, so the app
+      will not boot; this is the easiest place to brick the build
+- [ ] Editor state + tests (`src/features/agents/`)
+
+Details: `.trellis/spec/backend/agent-contract.md`.
+
+---
+
 ## When to Create Flow Documentation
 
 Create detailed flow docs when:

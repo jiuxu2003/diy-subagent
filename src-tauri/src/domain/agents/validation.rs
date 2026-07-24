@@ -1,21 +1,28 @@
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, str::FromStr};
 
-use super::{AgentDraft, AgentPlatform, PlatformOverride, ValidationIssue, ValidationSeverity};
+use toml_edit::DocumentMut;
+
+use super::{
+    AgentDraft, AgentPlatform, CodexOverride, PlatformOverride, ValidationIssue, ValidationSeverity,
+};
 
 pub fn validate_logical_name(name: &str) -> Result<(), ValidationIssue> {
     let bytes = name.as_bytes();
+    let is_separator = |byte: u8| byte == b'-' || byte == b'_';
     let has_valid_length = (2..=64).contains(&bytes.len());
     let starts_with_letter = bytes.first().is_some_and(u8::is_ascii_lowercase);
     let contains_only_supported_characters = bytes
         .iter()
-        .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || *byte == b'-');
-    let has_valid_hyphens =
-        bytes.last() != Some(&b'-') && !bytes.windows(2).any(|window| window == b"--");
+        .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || is_separator(*byte));
+    let has_valid_separators = !bytes.last().is_some_and(|byte| is_separator(*byte))
+        && !bytes
+            .windows(2)
+            .any(|window| is_separator(window[0]) && is_separator(window[1]));
 
     if has_valid_length
         && starts_with_letter
         && contains_only_supported_characters
-        && has_valid_hyphens
+        && has_valid_separators
     {
         return Ok(());
     }
@@ -24,7 +31,7 @@ pub fn validate_logical_name(name: &str) -> Result<(), ValidationIssue> {
         "agent.invalid_name",
         "logicalName",
         Some("name"),
-        "名称必须为 2–64 个小写字母、数字或单连字符，且以字母开头。",
+        "名称必须为 2–64 个小写字母、数字、连字符或下划线，以字母开头，分隔符不能连续或收尾。",
     ))
 }
 
@@ -44,74 +51,10 @@ pub fn validate_agent_draft(draft: &AgentDraft) -> Vec<ValidationIssue> {
     );
     require_text(
         &mut issues,
-        "shared.roleGoal",
-        None,
-        &draft.shared.role_goal,
-        "请填写角色目标。",
-    );
-    require_list(
-        &mut issues,
-        "shared.whenToUse",
-        &draft.shared.when_to_use,
-        "至少填写一个适用场景。",
-    );
-    require_list(
-        &mut issues,
-        "shared.whenNotToUse",
-        &draft.shared.when_not_to_use,
-        "至少填写一个禁用场景。",
-    );
-    require_list(
-        &mut issues,
-        "shared.inputRequirements",
-        &draft.shared.input_requirements,
-        "至少填写一个输入要求。",
-    );
-    require_list(
-        &mut issues,
-        "shared.executionSteps",
-        &draft.shared.execution_steps,
-        "至少填写一个执行步骤。",
-    );
-    require_text(
-        &mut issues,
-        "shared.outputContract",
-        None,
-        &draft.shared.output_contract,
-        "请填写输出契约。",
-    );
-    require_list(
-        &mut issues,
-        "shared.constraints",
-        &draft.shared.constraints,
-        "至少填写一个约束。",
-    );
-    require_list(
-        &mut issues,
-        "shared.stopConditions",
-        &draft.shared.stop_conditions,
-        "至少填写一个停止条件。",
-    );
-    require_text(
-        &mut issues,
-        "shared.failureHandling",
-        None,
-        &draft.shared.failure_handling,
-        "请填写失败处理方式。",
-    );
-    require_text(
-        &mut issues,
-        "usage.autoDelegationGuidance",
-        None,
-        &draft.usage.auto_delegation_guidance,
-        "请填写自动委派建议。",
-    );
-    require_text(
-        &mut issues,
-        "usage.verificationTask",
-        None,
-        &draft.usage.verification_task,
-        "请填写安装后的验证任务。",
+        "developerInstructions",
+        Some("developer_instructions"),
+        &draft.developer_instructions,
+        "请填写这个 subagent 需要遵循的指令。",
     );
 
     let mut seen_platforms = BTreeSet::new();
@@ -170,6 +113,7 @@ fn validate_platform_override(
                 "platformOverrides.codex.nicknameCandidates",
                 &value.nickname_candidates,
             );
+            validate_codex_extra_toml(issues, value.extra_toml.as_deref());
         }
         PlatformOverride::Cursor(_) => {}
     }
@@ -184,6 +128,34 @@ fn validate_platform_override(
     }
 }
 
+fn validate_codex_extra_toml(issues: &mut Vec<ValidationIssue>, extra_toml: Option<&str>) {
+    let Some(extra) = extra_toml.map(str::trim).filter(|value| !value.is_empty()) else {
+        return;
+    };
+    let document = match DocumentMut::from_str(extra) {
+        Ok(document) => document,
+        Err(_) => {
+            issues.push(issue(
+                "agent.invalid_extra_toml",
+                "platformOverrides.codex.extraToml",
+                None,
+                "附加 TOML 无法解析，请检查语法。",
+            ));
+            return;
+        }
+    };
+    for (key, _) in document.iter() {
+        if CodexOverride::RESERVED_TOP_LEVEL_KEYS.contains(&key) {
+            issues.push(issue(
+                "agent.reserved_extra_toml_key",
+                "platformOverrides.codex.extraToml",
+                Some(key),
+                "附加 TOML 不能覆盖名称、描述、指令等基础字段。",
+            ));
+        }
+    }
+}
+
 fn require_text(
     issues: &mut Vec<ValidationIssue>,
     field: &str,
@@ -193,12 +165,6 @@ fn require_text(
 ) {
     if value.trim().is_empty() {
         issues.push(issue("agent.required_field", field, native_field, message));
-    }
-}
-
-fn require_list(issues: &mut Vec<ValidationIssue>, field: &str, values: &[String], message: &str) {
-    if values.is_empty() || values.iter().any(|value| value.trim().is_empty()) {
-        issues.push(issue("agent.required_list", field, None, message));
     }
 }
 
@@ -236,13 +202,102 @@ fn issue(code: &str, field: &str, native_field: Option<&str>, message: &str) -> 
 
 #[cfg(test)]
 mod tests {
-    use super::validate_logical_name;
+    use std::collections::BTreeMap;
+
+    use super::{validate_agent_draft, validate_logical_name};
+    use crate::domain::agents::{
+        AgentDraft, AgentPlatform, CodexOverride, DraftProvenance, PlatformOverride,
+    };
+
+    fn draft_with_codex_override(codex: CodexOverride) -> AgentDraft {
+        AgentDraft {
+            logical_name: "pr_explorer".to_owned(),
+            description: "Read-only codebase explorer.".to_owned(),
+            developer_instructions: "Stay in exploration mode.".to_owned(),
+            platform_overrides: BTreeMap::from([(
+                AgentPlatform::Codex,
+                PlatformOverride::Codex(codex),
+            )]),
+            provenance: DraftProvenance::BuiltinTemplate {
+                template_id: "pr_explorer".to_owned(),
+                template_version: "1.0.0".to_owned(),
+            },
+        }
+    }
 
     #[test]
     fn validates_cross_platform_safe_names() {
         assert!(validate_logical_name("root-cause-debugger").is_ok());
+        assert!(validate_logical_name("pr_explorer").is_ok());
         assert!(validate_logical_name("A Bad Name").is_err());
         assert!(validate_logical_name("bad--name").is_err());
+        assert!(validate_logical_name("bad__name").is_err());
+        assert!(validate_logical_name("bad-_name").is_err());
         assert!(validate_logical_name("bad-").is_err());
+        assert!(validate_logical_name("bad_").is_err());
+        assert!(validate_logical_name("_bad").is_err());
+    }
+
+    #[test]
+    fn a_draft_with_the_three_required_fields_passes() {
+        let draft = draft_with_codex_override(CodexOverride::default());
+        assert!(validate_agent_draft(&draft).is_empty());
+    }
+
+    #[test]
+    fn missing_required_fields_are_reported_together() {
+        let mut draft = draft_with_codex_override(CodexOverride::default());
+        draft.description = "  ".to_owned();
+        draft.developer_instructions = String::new();
+
+        let issues = validate_agent_draft(&draft);
+        let fields = issues
+            .iter()
+            .map(|issue| issue.field.as_str())
+            .collect::<Vec<_>>();
+
+        assert_eq!(fields, vec!["description", "developerInstructions"]);
+        assert!(issues
+            .iter()
+            .all(|issue| issue.code == "agent.required_field"));
+    }
+
+    #[test]
+    fn unparseable_extra_toml_is_rejected() {
+        let draft = draft_with_codex_override(CodexOverride {
+            extra_toml: Some("[mcp_servers.docs\nurl = broken".to_owned()),
+            ..CodexOverride::default()
+        });
+
+        let issues = validate_agent_draft(&draft);
+
+        assert_eq!(issues.len(), 1);
+        assert_eq!(issues[0].code, "agent.invalid_extra_toml");
+    }
+
+    #[test]
+    fn extra_toml_must_not_redefine_reserved_top_level_keys() {
+        let draft = draft_with_codex_override(CodexOverride {
+            extra_toml: Some("model = \"gpt-5.4\"\n\n[mcp_servers.docs]\nurl = \"https://developers.openai.com/mcp\"\n".to_owned()),
+            ..CodexOverride::default()
+        });
+
+        let issues = validate_agent_draft(&draft);
+
+        assert_eq!(issues.len(), 1);
+        assert_eq!(issues[0].code, "agent.reserved_extra_toml_key");
+        assert_eq!(issues[0].native_field.as_deref(), Some("model"));
+    }
+
+    #[test]
+    fn extra_toml_with_only_unreserved_tables_passes() {
+        let draft = draft_with_codex_override(CodexOverride {
+            extra_toml: Some(
+                "[mcp_servers.docs]\nurl = \"https://developers.openai.com/mcp\"\n".to_owned(),
+            ),
+            ..CodexOverride::default()
+        });
+
+        assert!(validate_agent_draft(&draft).is_empty());
     }
 }

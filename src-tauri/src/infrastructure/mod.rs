@@ -1,7 +1,9 @@
+pub mod codex_config;
 pub mod database;
 pub mod filesystem;
 pub mod inventory_watcher;
 pub mod macos;
+pub mod model_fetcher;
 pub mod paths;
 pub mod source_registry;
 pub mod templates;

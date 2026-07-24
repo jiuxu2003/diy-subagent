@@ -18,6 +18,8 @@ TypeScript frontend.
 | Guide | Description | Status |
 |-------|-------------|--------|
 | [Directory Structure](./directory-structure.md) | Tauri commands, services, domain, adapters, and infrastructure | Initial baseline |
+| [Agent & Template Contracts](./agent-contract.md) | Simplified AgentDraft, codex adapter behavior, extraToml carrier, template packages | 2026-07 codex rework |
+| [Codex Model Catalog](./model-catalog.md) | `/v1/models` fetch chain: endpoint resolution, HTTP port, file cache, IPC command | 2026-07 codex rework |
 | [Database Guidelines](./database-guidelines.md) | SQLite metadata and template persistence | Initial baseline |
 | [Error Handling](./error-handling.md) | Typed Rust errors and stable IPC error contracts | Initial baseline |
 | [Quality Guidelines](./quality-guidelines.md) | Rust quality gates and contract tests | Initial baseline |
