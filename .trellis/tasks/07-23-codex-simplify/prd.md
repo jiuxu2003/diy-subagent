@@ -65,6 +65,7 @@
 - [ ] Codex 高级区 model 可从拉取的模型列表中选择；断网 / 无 key 时可手动输入；应用重启后列表来自缓存；刷新按钮可强制重拉。
 - [ ] 手写的无标记 codex TOML（含 `[mcp_servers.*]`）导入后可编辑，保存回写不丢未知表。
 - [ ] `pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm test:e2e` 与 `cargo fmt --check`、`cargo clippy -D warnings`、`cargo test` 全部通过。
+- [ ] 冒烟反馈（2026-07-24）：model 输入框可弹出真实下拉面板（WKWebView 下可见、点选回填、样式贴 CC-Switch）；思考强度选项随所选模型过滤（GPT 系列映射，max/ultra 仅 gpt-5.6 家族显示）；名称与描述各占一行；「切走再切回白屏退回首页」在 release 包中不复现（或已修复）。
 
 ## Notes
 

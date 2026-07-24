@@ -9,6 +9,7 @@ import type {
   TargetSelection,
 } from "../../../contracts";
 import { Button } from "../../../components/ui/Button";
+import { Combobox } from "../../../components/ui/Combobox";
 import {
   FieldShell,
   Input,
@@ -59,20 +60,73 @@ const claudePermissionModeOptions = [
 ];
 
 /**
- * Official reasoning-effort ladder, low to high, per the Codex source enum
- * (research/external.md). Availability per model is decided server-side.
+ * Reasoning-effort ladders per GPT model family. Sources: the official
+ * models page (learn.chatgpt.com/docs/models, 2026-07-24: the gpt-5.6-sol
+ * picker offers Low/Medium/High/Extra high/Max/Ultra) and the Codex
+ * config-reference baseline (minimal..xhigh). Matching uses the longest
+ * prefix against the trimmed model id.
  */
-const codexReasoningEffortOptions = [
-  inheritOption,
-  { value: "none", label: "none" },
-  { value: "minimal", label: "minimal" },
-  { value: "low", label: "low" },
-  { value: "medium", label: "medium" },
-  { value: "high", label: "high" },
-  { value: "xhigh", label: "xhigh" },
-  { value: "max", label: "max" },
-  { value: "ultra", label: "ultra" },
+const codexEffortLaddersByModelPrefix: readonly (readonly [
+  string,
+  readonly string[],
+])[] = [
+  ["gpt-5.6", ["low", "medium", "high", "xhigh", "max", "ultra"]],
+  ["gpt-5.5", ["minimal", "low", "medium", "high", "xhigh"]],
+  ["gpt-5.4", ["minimal", "low", "medium", "high", "xhigh"]],
+  ["gpt-5.3", ["minimal", "low", "medium", "high"]],
 ];
+
+/** Fallback ladder for unknown/non-GPT models and the inherit (empty) case. */
+const codexBaselineEffortLadder: readonly string[] = [
+  "minimal",
+  "low",
+  "medium",
+  "high",
+  "xhigh",
+];
+
+/** Prefix table ordered longest-first so overlapping prefixes stay stable. */
+const orderedCodexEffortLadders = [...codexEffortLaddersByModelPrefix].sort(
+  (a, b) => b[0].length - a[0].length,
+);
+
+function codexEffortLadderForModel(
+  model: string | null | undefined,
+): readonly string[] {
+  const normalized = (model ?? "").trim().toLowerCase();
+  if (normalized.length === 0) {
+    return codexBaselineEffortLadder;
+  }
+  const match = orderedCodexEffortLadders.find(([prefix]) =>
+    normalized.startsWith(prefix)
+  );
+  return match ? match[1] : codexBaselineEffortLadder;
+}
+
+/**
+ * Select options for model_reasoning_effort: inherit + the ladder for the
+ * chosen model. A stored value outside the ladder stays selectable so user
+ * data is never rewritten silently.
+ */
+function codexEffortOptionsForModel(
+  model: string | null | undefined,
+  currentEffort: string | null | undefined,
+): { value: string; label: string }[] {
+  const ladder = codexEffortLadderForModel(model);
+  const options = [
+    inheritOption,
+    ...ladder.map((effort) => ({ value: effort, label: effort })),
+  ];
+  if (
+    currentEffort !== null &&
+    currentEffort !== undefined &&
+    currentEffort.length > 0 &&
+    !ladder.includes(currentEffort)
+  ) {
+    options.push({ value: currentEffort, label: currentEffort });
+  }
+  return options;
+}
 
 const codexSandboxModeOptions = [
   inheritOption,
@@ -151,41 +205,39 @@ export function StructuredEditor({
         description="名称决定文件名与调用标识；描述决定何时自动委派。"
       >
         <div className="space-y-5">
-          <div className="grid grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] gap-5">
-            <FieldShell
-              htmlFor="logical-name"
-              label="名称"
-              hint="原生字段 name"
-            >
-              <Input
-                id="logical-name"
-                onChange={(event) => {
-                  onDraftChange({
-                    ...draft,
-                    logicalName: event.currentTarget.value,
-                  });
-                }}
-                spellCheck={false}
-                value={draft.logicalName}
-              />
-            </FieldShell>
-            <FieldShell
-              htmlFor="description"
-              label="描述"
-              hint="说明何时使用，也说明何时不要使用"
-            >
-              <Textarea
-                id="description"
-                onChange={(event) => {
-                  onDraftChange({
-                    ...draft,
-                    description: event.currentTarget.value,
-                  });
-                }}
-                value={draft.description}
-              />
-            </FieldShell>
-          </div>
+          <FieldShell
+            htmlFor="logical-name"
+            label="名称"
+            hint="原生字段 name"
+          >
+            <Input
+              id="logical-name"
+              onChange={(event) => {
+                onDraftChange({
+                  ...draft,
+                  logicalName: event.currentTarget.value,
+                });
+              }}
+              spellCheck={false}
+              value={draft.logicalName}
+            />
+          </FieldShell>
+          <FieldShell
+            htmlFor="description"
+            label="描述"
+            hint="说明何时使用，也说明何时不要使用"
+          >
+            <Textarea
+              id="description"
+              onChange={(event) => {
+                onDraftChange({
+                  ...draft,
+                  description: event.currentTarget.value,
+                });
+              }}
+              value={draft.description}
+            />
+          </FieldShell>
           <FieldShell
             htmlFor="developer-instructions"
             label="遵循指令"
@@ -550,6 +602,10 @@ function CodexAdvancedFields({
 }) {
   const models = useCodexModels();
   const catalogModels = models.catalog?.models ?? [];
+  const effortOptions = codexEffortOptionsForModel(
+    value.config.model,
+    value.config.modelReasoningEffort,
+  );
 
   return (
     <div className="mt-3 grid grid-cols-3 gap-5 border-t border-[var(--border)] pt-3">
@@ -559,25 +615,27 @@ function CodexAdvancedFields({
         hint={modelCatalogHint(models)}
       >
         <div className="flex items-center gap-2">
-          <Input
+          <Combobox
+            className="min-w-0 flex-1"
+            emptyState={<ModelPanelEmptyState models={models} />}
             id="codex-model"
-            list="codex-model-options"
-            onChange={(event) => {
+            noMatchState={
+              <p className="px-3 py-2 text-sm text-[var(--text-muted)]">
+                没有匹配的模型，可手动输入
+              </p>
+            }
+            onValueChange={(next) => {
               onUpdate({
                 ...value,
-                config: {
-                  ...value.config,
-                  model: nullable(event.currentTarget.value),
-                },
+                config: { ...value.config, model: nullable(next) },
               });
             }}
+            options={catalogModels}
             placeholder="继承父会话"
             spellCheck={false}
+            triggerLabel="选择模型"
             value={value.config.model ?? ""}
           />
-          <datalist id="codex-model-options">
-            {catalogModels.map((model) => <option key={model} value={model} />)}
-          </datalist>
           <Button
             aria-label="刷新模型列表"
             className="shrink-0"
@@ -595,7 +653,11 @@ function CodexAdvancedFields({
           </Button>
         </div>
       </FieldShell>
-      <FieldShell htmlFor="codex-effort" label="model_reasoning_effort">
+      <FieldShell
+        htmlFor="codex-effort"
+        label="model_reasoning_effort"
+        hint="可用档位以所选模型为准"
+      >
         <Select
           id="codex-effort"
           onValueChange={(next) => {
@@ -607,7 +669,7 @@ function CodexAdvancedFields({
               },
             });
           }}
-          options={codexReasoningEffortOptions}
+          options={effortOptions}
           value={toSelectValue(value.config.modelReasoningEffort)}
         />
       </FieldShell>
@@ -634,6 +696,38 @@ function CodexAdvancedFields({
         />
       </FieldShell>
     </div>
+  );
+}
+
+/** Panel body when the catalog holds no models at all. */
+function ModelPanelEmptyState({
+  models,
+}: {
+  models: ReturnType<typeof useCodexModels>;
+}) {
+  if (models.isError) {
+    return (
+      <div className="space-y-2 px-3 py-2">
+        <p className="text-sm text-[var(--text-muted)]">
+          获取模型列表失败，可手动输入
+        </p>
+        <Button
+          disabled={models.isFetching}
+          onClick={() => {
+            models.refresh();
+          }}
+          size="sm"
+          variant="secondary"
+        >
+          重试
+        </Button>
+      </div>
+    );
+  }
+  return (
+    <p className="px-3 py-2 text-sm text-[var(--text-muted)]">
+      未获取到模型列表，可手动输入
+    </p>
   );
 }
 

@@ -44,6 +44,14 @@
 - [ ] D4 人工冒烟（`pnpm tauri:dev`）：① 模板区 = 自定义 + 6 官方；② 选 docs_researcher 预览 TOML 含 mcp_servers 表；③ 空白新建默认值正确、三字段可装；④ model 下拉出列表、断网可手输、重启走缓存、刷新强拉；⑤ 手写无 marker TOML 导入可编辑。
 - [ ] D5 对照 `prd.md` Acceptance Criteria 逐条勾验。
 
+## Stage E — 冒烟反馈修复（2026-07-24 用户实测五项）
+
+- [x] E1 model 下拉重做：`<datalist>` 在 WKWebView 不渲染面板，改为 cc-switch 式 Input+弹出面板（新增 `@radix-ui/react-popover`）：输入框保持自由输入，旁置 ChevronDown 触发面板（滚动列表、点选回填、按输入子串过滤、精确匹配或空输入时显示全量）与 RefreshCw 刷新钮；面板样式贴 CC-Switch 卡片风（rounded-xl/var(--surface)/var(--border)）。
+- [x] E2 effort 档位按模型过滤（GPT 系列静态映射，官方 models 页 2026-07-24 口径）：`gpt-5.6*`→low/medium/high/xhigh/max/ultra；`gpt-5.5*`、`gpt-5.4*`→minimal/low/medium/high/xhigh；`gpt-5.3*`→minimal/low/medium/high；未知/非 GPT→minimal/low/medium/high/xhigh + hint「可用档位以所选模型为准」；已存值不在列表时保留为附加选项（不静默改数据）；继承选项恒在。
+- [x] E3 名称、描述改为各自独占一行（去掉 0.7fr/1.3fr 双列网格）。
+- [x] E4 测试跟随（StructuredEditor 面板/过滤/映射断言）+ lint/typecheck/test 三连绿。
+- [ ] E5 白屏诊断：dev 疑似 Vite ws 重连触发整页 reload（导航为内存 state 故回首页）；打 release 包实测对照，若 release 复现则追加导航状态持久化修复。
+
 ## 复查门
 
 - Stage A/B/C 各自验证命令绿后才进下一阶段；D4 冒烟中涉及真实网络与 `~/.codex` 读取，只读操作，不写用户配置。
