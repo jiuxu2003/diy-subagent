@@ -194,10 +194,10 @@ describe("CreatePage", () => {
       "",
     );
     expect(screen.getByRole("textbox", { name: "遵循指令" })).toHaveValue("");
-    expect(screen.getByLabelText("model_reasoning_effort")).toHaveTextContent(
+    expect(screen.getByLabelText("思考强度")).toHaveTextContent(
       "medium",
     );
-    expect(screen.getByLabelText("sandbox_mode")).toHaveTextContent(
+    expect(screen.getByLabelText("沙盒模式")).toHaveTextContent(
       "read-only",
     );
     expect(screen.getByText(/从空白开始定制一个 subagent/)).toBeVisible();

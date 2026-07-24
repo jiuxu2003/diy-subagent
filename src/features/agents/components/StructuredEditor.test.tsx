@@ -114,7 +114,7 @@ function renderEditor(options: RenderOptions = {}) {
 
 /** Opens the reasoning-effort select and returns the option labels. */
 async function openEffortOptions(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByLabelText("model_reasoning_effort"));
+  await user.click(screen.getByLabelText("思考强度"));
   return screen.getAllByRole("option").map((option) => option.textContent);
 }
 
@@ -178,11 +178,20 @@ describe("StructuredEditor", () => {
     ]);
   });
 
+  it("labels the codex advanced fields in Chinese", async () => {
+    renderEditor({ draft: codexDraft, targets: codexTargets });
+    expect(await screen.findByText("列表来自缓存，可手动输入")).toBeVisible();
+
+    expect(screen.getByLabelText("模型")).toHaveValue("");
+    expect(screen.getByLabelText("思考强度")).toHaveTextContent("medium");
+    expect(screen.getByLabelText("沙盒模式")).toHaveTextContent("read-only");
+  });
+
   it("limits reasoning efforts to the baseline ladder without a model", async () => {
     const user = userEvent.setup();
     renderEditor({ draft: codexDraft, targets: codexTargets });
     expect(await screen.findByText("列表来自缓存，可手动输入")).toBeVisible();
-    expect(screen.getByText("可用档位以所选模型为准")).toBeVisible();
+    expect(screen.getByText("档位随模型而定")).toBeVisible();
 
     expect(await openEffortOptions(user)).toEqual([
       "继承",

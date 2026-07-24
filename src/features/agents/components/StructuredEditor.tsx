@@ -611,7 +611,7 @@ function CodexAdvancedFields({
     <div className="mt-3 grid grid-cols-3 gap-5 border-t border-[var(--border)] pt-3">
       <FieldShell
         htmlFor="codex-model"
-        label="model"
+        label="模型"
         hint={modelCatalogHint(models)}
       >
         <div className="flex items-center gap-2">
@@ -655,8 +655,8 @@ function CodexAdvancedFields({
       </FieldShell>
       <FieldShell
         htmlFor="codex-effort"
-        label="model_reasoning_effort"
-        hint="可用档位以所选模型为准"
+        label="思考强度"
+        hint="档位随模型而定"
       >
         <Select
           id="codex-effort"
@@ -675,7 +675,7 @@ function CodexAdvancedFields({
       </FieldShell>
       <FieldShell
         htmlFor="codex-sandbox"
-        label="sandbox_mode"
+        label="沙盒模式"
         labelAccessory={
           <HelpTip aria-label="沙盒模式说明" content={SANDBOX_MODE_HELP} />
         }

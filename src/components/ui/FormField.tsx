@@ -12,6 +12,7 @@ interface FieldShellProps {
   label: string;
   /** Optional inline accessory rendered right after the label, e.g. HelpTip. */
   labelAccessory?: ReactNode;
+  /** Single-line status text on the label row; truncates instead of wrapping. */
   hint?: string;
   error?: string;
   htmlFor: string;
@@ -40,7 +41,13 @@ export function FieldShell({
           {labelAccessory}
         </span>
         {hint
-          ? <span className="text-xs text-[var(--text-subtle)]">{hint}</span>
+          ? (
+            /* truncate keeps the label row one line tall, so controls in
+               sibling grid columns keep their top edges aligned. */
+            <span className="truncate text-xs text-[var(--text-subtle)]">
+              {hint}
+            </span>
+          )
           : null}
       </div>
       {children}
